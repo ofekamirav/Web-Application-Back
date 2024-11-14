@@ -1,0 +1,22 @@
+{
+  "name": "web-application-first-assignment",
+  "version": "1.0.0",
+  "description": "First assignment to practice REST API request using Nodejs and Express.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ofekamirav/Web-Application-First-assignment"
+  },
+  "author": "Ofek Amirav, Nitzan Naveh",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "nodemon": "^3.1.7"
+  }
+}
