@@ -1,0 +1,16 @@
+#get post by ID
+GET http://localhost:3000/post/<change to specific id>
+
+
+#post an update for specific post
+POST http://localhost:3000/post Content-Type: application/json
+{
+    "title":"Ofek's post", "content":"Hello to my updated post", "owner":"Ofek"
+}
+
+#Create new comment for specific post
+POST http://localhost:3000/ Content-Type: application/json
+{
+    "post_id":"", "content":"First comment on this post", "owner":"Ofek A", "date":"22.11.2024"
+}
+
