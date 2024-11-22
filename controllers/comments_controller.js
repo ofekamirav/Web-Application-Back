@@ -1,5 +1,5 @@
 //Import comment model
-const Comment=require('../models/comments_model');
+const Comment=require('../models/comment_model');
 const Post=require('../models/posts_model');
 
 
