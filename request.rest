@@ -1,16 +1,22 @@
-#get post by ID
-GET http://localhost:3000/post/<change to specific id>
+#Get post by ID
+GET http://localhost:3000/post/<change to specific id after we create some data>
 
 
-#post an update for specific post
-POST http://localhost:3000/post Content-Type: application/json
+#Post an update for specific post
+POST http://localhost:3000/post/<change to specific id after we create some data> Content-Type: application/json
 {
     "title":"Ofek's post", "content":"Hello to my updated post", "owner":"Ofek"
 }
 
 #Create new comment for specific post
-POST http://localhost:3000/ Content-Type: application/json
+POST http://localhost:3000/post/<change to specific id after we create some data>/comment Content-Type: application/json
 {
-    "post_id":"", "content":"First comment on this post", "owner":"Ofek A", "date":"22.11.2024"
+    "post_id":"<change to specific id after we create some data>", "content":"First comment on this post", "owner":"Ofek A", "date":"22.11.2024"
 }
+
+#Get all comments of specific post
+GET http://localhost:3000/post/<change to specific id after we create some data>/comment
+
+#Delete comment from specific post
+DELETE http://localhost:3000/post/<change to specific id after we create some data>/comment/<change to specific comment id after we create some data>
 
