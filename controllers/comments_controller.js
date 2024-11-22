@@ -38,4 +38,22 @@ const DeleteComment = async (req, res) => {
       return res.status(500).json({ message: error.message });
     }
   };
-module.exports={CreateComment, DeleteComment};
+
+  //Handler to get all comments of a specific post
+const GetAllCommentsOfPost= async (req,res)=>{
+    try{
+        const post=await Post.findById(req.params.id);
+        if(post==null)
+            return res.status(404).json({message:'Post not found'});
+        const comments=await Comment.find({post_id: post.id});
+        if(comments==null)
+            return res.status(404).json({message:'No comments found'});
+        return res.status(200).json(comments);
+    }catch(error){
+        return res.status(500).json({message:error.message});
+    }
+};
+
+
+
+module.exports={CreateComment, DeleteComment, GetAllCommentsOfPost};
