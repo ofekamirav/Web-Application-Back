@@ -4,12 +4,15 @@ const postSchema = new mongoose.Schema({
       type: String,
       required: true,
     },
-    content: String,
+    content: {
+      type: String, 
+      required: true
+    },
     owner: {
       type: String,
       required: true,
     },
   });
 
-  const Posts = mongoose.model('Posts', postSchema);
-  module.exports = Posts;
+  const Post = mongoose.model('Posts', postSchema);
+  module.exports = Post;
