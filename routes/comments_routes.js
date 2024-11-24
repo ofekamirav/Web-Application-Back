@@ -3,12 +3,11 @@ const router = express.Router();
 const commentsController=require('../controllers/comments_controller');
 
 //routing all the comments requests to the relevant handler
-router.put('/',commentsController.CreateComment);
+router.post('/',commentsController.CreateComment);
 router.delete('/:id',commentsController.DeleteComment);
-router.get('/',commentsController.GetAllCommentsOfPost);
-
-
-
+router.get('/:id',commentsController.GetAllCommentsOfPost);
+router.put('/:id',commentsController.updateComment);
+router.get('/:owner',commentsController.getAllCommentsBySpecificUser);
 
 
 

@@ -3,18 +3,18 @@ const app = express();
 const dotenv = require('dotenv').config();
 const port = process.env.PORT || 3000;
 const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
 const PostsRoute=require('./routes/posts_routes');
 const CommentsRoute=require('./routes/comments_routes');
 
-
-
 // Setup Body-parser to analyze URL
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 // import Routes
 app.use("/post", PostsRoute);
 app.use("/comment", CommentsRoute);
+
 
 
 // Connect to MongoDB
