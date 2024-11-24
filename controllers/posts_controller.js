@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const Post = require('../models/posts_model');
 
 const getAllPosts = async (req, res) => {
@@ -10,7 +9,6 @@ const getAllPosts = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 const createPost = async (req, res) => {
     const post = new Post({
@@ -58,7 +56,11 @@ const getPostById= async (req,res)=>{
 //Handler to get all the posts that published by the same owner
 const getPostsByOwner= async (req,res)=>{
     try{
-        const posts=await Post.find({owner: req.params.owner});
+        const owner = req.query.owner;
+        if (!owner) {
+            return res.status(400).json({ message: 'Owner ID is required' });
+        }
+        const posts=await Post.find({owner: owner});
         if(posts==null)
             return res.status(404).json({message:'No posts found'});
         return res.status(200).json(posts);
