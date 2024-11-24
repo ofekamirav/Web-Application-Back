@@ -17,5 +17,5 @@ const commentSchema = new mongoose.Schema({
         default: Date.now,
     },
 });
-const Comments = mongoose.model('Comments', commentSchema);
-module.exports = Comments;
+const Comment = mongoose.model('Comments', commentSchema);
+module.exports = Comment;
