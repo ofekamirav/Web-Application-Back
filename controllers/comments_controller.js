@@ -1,6 +1,5 @@
 const Comment=require('../models/comment_model');
 const Post=require('../models/posts_model');
-const mongoose = require('mongoose');
 
 const updateComment = async (req, res) => {
     const { id } = req.params;
@@ -63,11 +62,6 @@ const CreateComment= async(req,res)=>{
 //Handler to delete a comment from specific post
 const DeleteComment = async (req, res) => {
     try {
-      /*const post = await Post.findById(req.params.post_id);
-      if (post==null) {
-        return res.status(404).json({ message: `Post: ${postId} not found` });
-      }
-  */
       const comment = await Comment.findOneAndDelete({ _id: req.params.id});
   
       if (comment==null) {
