@@ -1,7 +1,8 @@
-const Comment=require('../models/comment_model');
-const Post=require('../models/posts_model');
+import Comment from "../models/comment_model"
+import Post from '../models/posts_model';
+import { Request, Response } from 'express';
 
-const updateComment = async (req, res) => {
+const updateComment = async (req:Request, res:Response) => {
     const { id } = req.params;
     const { content, owner } = req.body;
 
@@ -17,12 +18,12 @@ const updateComment = async (req, res) => {
         }
 
         res.status(200).json(updatedComment);
-    } catch (error) {
+    } catch (error: any) {
         res.status(400).json({ message: error.message });
     }
 };
 
-const getAllCommentsBySpecificUser = async (req, res) => {
+const getAllCommentsBySpecificUser = async (req:Request, res:Response) => {
     const { owner } = req.params;
 
     try {
@@ -33,13 +34,13 @@ const getAllCommentsBySpecificUser = async (req, res) => {
         }
 
         res.status(200).json(comments);
-    } catch (error) {
+    } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
 };
 
 //Handler to create a new Comment for specific post
-const CreateComment= async(req,res)=>{
+const CreateComment= async(req:Request,res:Response)=>{
     try{
         const comment = await Comment.create({
             post_id: req.body.post_id, 
@@ -54,13 +55,13 @@ const CreateComment= async(req,res)=>{
         if(post==null)
             return res.status(404).json({message:'Post not found,can not create comment'});
         return res.status(201).json(comment);
-}catch(error){
+}catch(error: any){
     return res.status(500).json({message:error.message});
 }
 };
 
 //Handler to delete a comment from specific post
-const DeleteComment = async (req, res) => {
+const DeleteComment = async (req:Request, res:Response) => {
     try {
       const comment = await Comment.findOneAndDelete({ _id: req.params.id});
   
@@ -69,13 +70,13 @@ const DeleteComment = async (req, res) => {
       }
   
       return res.status(200).json({ message: 'Comment deleted' });
-    } catch (error) {
+    } catch (error: any) {
       return res.status(500).json({ message: error.message });
     }
   };
 
   //Handler to get all comments of a specific post
-const GetAllCommentsOfPost= async (req,res)=>{
+const GetAllCommentsOfPost= async (req:Request,res:Response)=>{
     try{
         const post=await Post.findById(req.params.id);
         if(post==null)
@@ -84,17 +85,11 @@ const GetAllCommentsOfPost= async (req,res)=>{
         if(comments==null)
             return res.status(404).json({message:'No comments found'});
         return res.status(200).json(comments);
-    }catch(error){
+    }catch(error: any){
         return res.status(500).json({message:error.message});
     }
 };
 
 
 
-module.exports={
-    CreateComment,
-    DeleteComment, 
-    GetAllCommentsOfPost, 
-    updateComment,
-    getAllCommentsBySpecificUser
-};
+export default {CreateComment,DeleteComment,GetAllCommentsOfPost,updateComment,getAllCommentsBySpecificUser};

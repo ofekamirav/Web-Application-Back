@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+
 const commentSchema = new mongoose.Schema({
     post_id: {
         type: String,
@@ -18,4 +19,5 @@ const commentSchema = new mongoose.Schema({
     },
 });
 const Comment = mongoose.model('Comments', commentSchema);
-module.exports = Comment;
+
+export default Comment;
