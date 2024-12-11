@@ -4,7 +4,7 @@
   "description": "First assignment to practice REST API request using Nodejs and Express.",
   "main": "index.js",
   "scripts": {
-    "start": "tsc && node ./dist/app.js",
+    "start": "tsc && node ./dist/src/app.js",
     "dev": "nodemon ./src/app.ts",
     "test": "tsc &&jest --detectOpenHandles --forceExit",
     "lint": "eslint . --ext .ts"
@@ -16,15 +16,17 @@
   "author": "Ofek Amirav, Nitzan Naveh",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.2",
     "nodemon": "^3.1.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
-    "@types/express": "^5.0.0",
+    "@types/express": "^4.17.1",
     "@types/jest": "^29.5.14",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.16.0",
