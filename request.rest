@@ -21,7 +21,7 @@ POST http://localhost:3000/comment
 Content-Type: application/json
 
 {
-    "post_id":"67436f4c5b95d41915b19ebf",
+    "post_id":"67598de468bbc81ed8af409f",
     "content":"First comment on this post",
     "owner":"Ofek A",
     "date":"22.11.2024"

@@ -1,27 +1,15 @@
 import express, { Request, Response } from 'express';
 const router = express.Router();
-import postsController from "../controllers/posts_controller";
+import postController from "../controllers/posts_controller";
 
-//routing all the posts requests to the relevant handler
-router.get('/', async (req, res) => {
-    if (req.query.owner) {
-         postsController.getPostsByOwner(req, res);
-    } else {
-         postsController.getAllPosts(req, res);
-    }
-});
-router.post('/', postsController.createPost);
+router.get("/", (req, res) => {
+    postController.getAll.bind(postController)(req, res);
+})
 
-router.put('/:id', (req,res)=>{
-    postsController.UpdatePost(req,res);
-});
+router.post("/", postController.create.bind(postController));
 
-router.delete('/:id', (req,res)=>{
-    postsController.deletePost(req,res);
-});
-
-router.get('/:id', (req,res)=>{
-    postsController.getPostById(req,res);
+router.get("/:id", (req: Request, res: Response) => {
+    postController.getById(req, res);
 });
 
 
