@@ -45,14 +45,52 @@ class BaseController<T> {
             const post=await this.model.findById(id);
             console.log(post); 
             if(post==null)
-                return res.status(404).json({message:'Post not found'});
+                return res.status(404).send({message:'Post not found'});
             return res.status(200).json(post);
         }
         catch(error){
             return res.status(500).send(error);   
         }
     };
-}
+
+    async updateById(req: Request, res: Response) {
+        const id = req.params.id;
+        try {
+            const updatedPost = await this.model.findByIdAndUpdate(id, req.body, { new: true });
+            if (!updatedPost) {
+                return res.status(404).send({ message: 'Post not found' });
+            }
+            return res.status(200).send(updatedPost);
+        } catch (error) {
+            return res.status(500).send(error);
+        }
+    }
+
+    async deleteById(req: Request, res: Response) {
+        const id = req.params.id;
+        try {
+            const deletedPost = await this.model.findByIdAndDelete(id);
+            if (!deletedPost) {
+                return res.status(404).send({ message: 'Post not found' });
+            }
+            return res.status(200).send({ message: 'Post deleted successfully' });
+        } catch (error) {
+            return res.status(500).send(error);
+        }
+    }
+
+    async getByOwner (req:Request,res:Response){
+        const owner= req.params.owner;
+        try{
+            const posts=await this.model.find({owner:owner});
+            if(posts==null)
+                return res.status(404).send({message:'No posts found'});
+            return res.status(200).send(posts);
+        } catch(error){
+            return res.status(500).send(error);
+        }
+    }
+};
 
 const createController = <T> (model: Model<T>) => {
     return new BaseController(model);
