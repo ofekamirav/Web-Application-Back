@@ -24,7 +24,7 @@ const initApp= async () =>{
         console.log('initApp finished');
 
         app.use(bodyParser.json());
-        app.use(bodyParser.urlencoded({ extended: true }));
+        app.use(bodyParser.urlencoded({ extended: true })); 
 
         app.use('/post', PostsRoute);
         app.use('/comment', CommentsRoute); 

@@ -2,5 +2,5 @@
 export default {
     preset: 'ts-jest',
     testEnvironment: 'node',
-    root: ["<rootDir>/src"],
-};
+    roots: ["<rootDir>/src"],
+}
