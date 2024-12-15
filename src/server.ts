@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import PostsRoute from './routes/posts_routes'; 
 import CommentsRoute from './routes/comments_routes'; 
+import AuthRoute from './routes/auth_routes';
 const app = express();
 
 const initApp= async () =>{
@@ -27,7 +28,8 @@ const initApp= async () =>{
         app.use(bodyParser.urlencoded({ extended: true })); 
 
         app.use('/post', PostsRoute);
-        app.use('/comment', CommentsRoute); 
+        app.use('/comment', CommentsRoute);
+        app.use('/auth', AuthRoute); 
         resolve(app);
     }).catch((error) => {
         console.error('Error when trying to connect to the database:', error);
