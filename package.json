@@ -7,6 +7,9 @@
     "start": "tsc && node ./dist/src/app.js",
     "dev": "nodemon ./src/app.ts",
     "test": "tsc &&jest --detectOpenHandles --forceExit",
+    "testPost": "tsc && jest --detectOpenHandles --forceExit posts.test.ts",
+    "testComment": "tsc && jest --detectOpenHandles --forceExit comments.test.ts",
+    "testAuth": "tsc && jest --detectOpenHandles --forceExit auth.test.ts",
     "lint": "eslint . --ext .ts"
   },
   "repository": {
@@ -29,6 +32,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^4.17.1",
     "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.16.0",
     "globals": "^15.13.0",

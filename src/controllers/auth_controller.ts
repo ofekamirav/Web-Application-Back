@@ -1,6 +1,7 @@
 import { Request,Response} from 'express';
 import  UserModel  from "../models/users_model";
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 async function register(req: Request, res: Response) {
     
@@ -29,6 +30,40 @@ async function register(req: Request, res: Response) {
     }
 }
 
-const authController = {register};
+async function login(req: Request, res: Response) {
+    const email = req.body.email;
+    const password = req.body.password;
+    if (!email || !password) {
+        return res.status(400).send({ error: 'missing required fields' });
+    }
+    try {
+        const user = await UserModel.findOne({ email });
+        if (!user) {
+            return res.status(400).send({ error: 'Email not registered' });
+        }
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.status(400).send({ error: 'Worng email or password' });
+        }
+        if(!process.env.ACCESS_TOKEN_SECRET){
+            return res.status(400).send({ error: 'Missing auth configuration' });
+        }
+
+        const accessToken = await jwt.sign(
+            { _id: user._id }, 
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: process.env.TOKEN_EXPIRATION });
+
+        res.status(200).send({ 
+            email: user.email,
+            _id: user._id,
+            token: accessToken
+        });
+    } catch (error) {
+        res.status(400).send(error);
+    }
+}
+
+const authController = {register, login};
 
 export default authController;
