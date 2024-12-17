@@ -1,6 +1,6 @@
 import request from "supertest";
 import initApp from "../server";
-import  Post  from "../models/posts_model";
+import UserModel from "../models/users_model";
 import mongoose from "mongoose";
 import { Express } from "express";
 
@@ -11,8 +11,8 @@ beforeAll(async () => {
     console.log("init app");
     app = await initApp();
     console.log("app initialized");
-    await Post.deleteMany({});
-    console.log("Delete all posts before testing");
+    await UserModel.deleteMany({});
+    console.log("Delete all users before testing");
 });
 
 afterAll(async () => {
@@ -40,9 +40,18 @@ describe("Auth Tests",()=>{
         expect(response.statusCode).toBe(201);
     });
 
+    test("Login test", async () => {
+        const response = await request(app).post("/auth/login").send({
+            email: userInfo.email,
+            password: userInfo.password
+        });
+        console.log(response.body);
+        expect(response.statusCode).toBe(200);
+        userInfo.id=response.body._id;
+        userInfo.token=response.body.token;
+    });
+
    
-
-
 
 
 });
