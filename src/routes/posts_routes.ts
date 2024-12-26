@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 const router = express.Router();
 import postController from "../controllers/posts_controller";
+import { authMiddleware } from '../controllers/auth_controller';
 
 router.get('/', async (req, res) => {
     if (req.query.owner) {
@@ -10,9 +11,9 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.post("/", postController.create.bind(postController));
+router.post("/", authMiddleware, postController.create.bind(postController));
 
-router.put("/:id", (req: Request, res: Response) => {
+router.put("/:id", authMiddleware, (req: Request, res: Response) => {
     postController.updateById.bind(postController)(req, res);
 });
 
@@ -20,7 +21,7 @@ router.get("/:id", (req: Request, res: Response) => {
     postController.getById.bind(postController)(req, res);
 });
 
-router.delete("/:id", (req: Request, res: Response) => {
+router.delete("/:id", authMiddleware, (req: Request, res: Response) => {
     postController.deleteById.bind(postController)(req, res);
 });
 

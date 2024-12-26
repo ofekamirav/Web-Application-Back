@@ -1,4 +1,4 @@
-import { Request,Response} from 'express';
+import { NextFunction, Request,Response} from 'express';
 import  UserModel  from "../models/users_model";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -43,7 +43,7 @@ async function login(req: Request, res: Response) {
         }
         const match = await bcrypt.compare(password, user.password);
         if (!match) {
-            return res.status(400).send({ error: 'Worng email or password' });
+            return res.status(400).send({ error: 'Wrong email or password' });
         }
         if(!process.env.ACCESS_TOKEN_SECRET){
             return res.status(400).send({ error: 'Missing auth configuration' });
@@ -63,7 +63,32 @@ async function login(req: Request, res: Response) {
         res.status(400).send(error);
     }
 }
+type Payload = {
+    _id: string
+}
+export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    //  get the authorization header and extract the token from it 
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) { 
+        res.status(401).send({ error: 'Access denied' });
+        return;
+    }
+    if(!process.env.ACCESS_TOKEN_SECRET){
+        res.status(400).send({ error: 'Missing auth configuration' });
+        return;
+    }
 
-const authController = {register, login};
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, payload) => {
+        if (err) {
+            res.status(403).send({ error: 'Invalid token' });
+            return;
+        }
+        req.params.userId = (payload as Payload)._id;
+        next();
+    });
+}
+
+const authController = {register, login, authMiddleware};
 
 export default authController;
