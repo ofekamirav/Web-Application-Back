@@ -24,9 +24,10 @@ async function register(req: Request, res: Response) {
             email: email,
             password: hashedPassword,
         }); 
-        res.status(201).send({ user });
+        return res.status(200).send(user);
     } catch (error) {
-        res.status(400).send(error);
+        console.error('Error creating user:', error);
+        return res.status(400).send(error);
     }
 }
 
@@ -68,7 +69,7 @@ type Payload = {
 }
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     //  get the authorization header and extract the token from it 
-    const authHeader = req.headers['authorization'];
+    const authHeader = req.header('authorization');
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) { 
         res.status(401).send({ error: 'Access denied' });
@@ -84,7 +85,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
             res.status(403).send({ error: 'Invalid token' });
             return;
         }
-        req.params.userId = (payload as Payload)._id;
+        req.params.userId = (payload as Payload)._id; // add the user id to the request
         next();
     });
 }

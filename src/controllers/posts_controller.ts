@@ -5,17 +5,17 @@ import BaseController from "./base_controller";
 
 class PostController extends BaseController<iPost> {
     constructor() {
-        super(Post);// Pass the model to the base controller
+        super(Post); // inherit base controller to override create method
     }
 
     async create (req:Request, res:Response) {
-        const userId = req.params.userId;
+        const userId = req.params.userId; 
         const post = {
             ...req.body, 
-            owner: userId // Add the owner field to the post
+            owner: userId // the owner of the post is the user that created 
         }
         req.body = post;
-        super.create(req,res);
+        return super.create(req,res);
     };
 }
 

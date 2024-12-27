@@ -13,7 +13,7 @@ router.get("/:id", (req, res) => {
     commentsController.getById.bind(commentsController)(req, res);
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", authMiddleware, (req, res) => {
     commentsController.updateById.bind(commentsController)(req, res);
 });
 

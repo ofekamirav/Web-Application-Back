@@ -31,33 +31,15 @@ beforeAll(async () => {
     await request(app).post("/auth/register").send(userInfo);
     const res = await request(app).post("/auth/login").send(userInfo);
     userInfo.token = res.body.token;
-    userInfo.id = res.body.id;
+    userInfo.id = res.body._id;
     expect(userInfo.token).toBeDefined();
 });
 
 let postID= "";
 
-const testPost1 = {
-    title: "Post 1",
-    content: "Content of post 1", 
-    owner: "Ofek Amirav"
-};
-
-const UpdatePost = {
-    title: "Post Updated",
-    content: "Content of post 2", 
-    owner: "Ofek Amirav"
-};
-
-const invalidPost = {
-    title: "Post 3",
-    content: "Content of post 3"
-};
-
 describe("Posts Tests",()=>{
     test("Get All Posts test", async () => {
         const response = await request(app).get("/post");
-        console.log(response.body);//print all posts
         expect(response.statusCode).toBe(200);//expecting for 200 Ok
     });
 
@@ -72,6 +54,7 @@ describe("Posts Tests",()=>{
         expect(response.statusCode).toBe(201);//expecting for 201 Created
         expect(response.body.title).toBe("Post 1");
         expect(response.body.content).toBe("Content of post 1");
+        expect(response.body.owner).toBe(userInfo.id);
         postID = response.body._id;
     });
 
@@ -86,6 +69,7 @@ describe("Posts Tests",()=>{
         expect(response.statusCode).toBe(201); 
         expect(response.body.title).toBe("Post 2");
         expect(response.body.content).toBe("Content of post 2");
+        expect(response.body.owner).toBe(userInfo.id);
         postID = response.body._id;
     });
 
@@ -109,9 +93,15 @@ describe("Posts Tests",()=>{
     test("Update Post test", async () => {
         const response = await request(app).put("/post/"+postID)
         .set({ authorization: "JWT " + userInfo.token })
-        .send(UpdatePost);
+        .send({
+            title: "Post Updated",
+            content: "Content of updated post", 
+            })
         console.log(response.body);//print the post that was updated
         expect(response.statusCode).toBe(200);//expecting for 200 Ok
+        expect(response.body.title).toBe("Post Updated");
+        expect(response.body.content).toBe("Content of updated post");
+        expect(response.body.owner).toBe(userInfo.id);
     });
 
     test("Get Post By Owner test", async () => {
@@ -125,7 +115,7 @@ describe("Posts Tests",()=>{
         .set({ authorization: "JWT " + userInfo.token })
         expect(response.statusCode).toBe(200);
 
-        const response2 = await request(app).get("/post/" + postID);
+        const response2 = await request(app).get("/post/" + postID); // try to delete the post again
         expect(response2.statusCode).toBe(404); 
     });
 });
