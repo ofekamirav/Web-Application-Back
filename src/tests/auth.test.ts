@@ -60,7 +60,7 @@ describe("Auth Tests",()=>{
         expect(response.body.accessToken).toBeDefined();
         expect(response.body.refreshToken).toBeDefined();
         expect(response.body._id).toBeDefined();
-        userInfo.accessToken = response.body.token;
+        userInfo.accessToken = response.body.accessToken;
         userInfo.refreshToken = response.body.refreshToken;
     });
 
@@ -106,14 +106,14 @@ describe("Auth Tests",()=>{
         userInfo.refreshToken = response.body.refreshToken;
     });
 
-    test("Logout - refresh token deleted", async () => {
+    test("Logout - deactivate refresh token", async () => {
         const response = await request(app).post(baseURL + "/logout")
         .send({
             refreshToken: userInfo.refreshToken
         });
         expect(response.statusCode).toBe(200);
 
-        const response2 = await request(app).post(baseURL + "/logout")
+        const response2 = await request(app).post(baseURL + "/refresh") // try to refresh the token after logout
         .send({
             refreshToken: userInfo.refreshToken
         });
@@ -126,7 +126,7 @@ describe("Auth Tests",()=>{
         .send({
             email: userInfo.email,
             password: userInfo.password,
-            nane: userInfo.name,
+            name: userInfo.name,
         });
         expect(response.statusCode).toBe(200);
         userInfo.accessToken = response.body.accessToken;
@@ -145,7 +145,7 @@ describe("Auth Tests",()=>{
         .send({
             refreshToken: userInfo.refreshToken
         });
-        expect(response3.statusCode).not.toBe(200); // token already deleted
+        expect(response3.statusCode).not.toBe(200); // token already used
 
         // try to use the new refresh token - fail 
         const response4 = await request(app).post(baseURL + "/refresh")
@@ -153,6 +153,16 @@ describe("Auth Tests",()=>{
             refreshToken: newRefreshToken
         });
         expect(response4.statusCode).not.toBe(200);
+    });
+
+    test("Make sure 2 access tokens are different", async () => {
+        const response = await request(app).post(baseURL + "/login")
+        .send({
+            email: userInfo.email,
+            password: userInfo.password,
+            name: userInfo.name,
+        });
+        expect(response.body.accessToken).not.toEqual(userInfo.accessToken);
     });
 
 
