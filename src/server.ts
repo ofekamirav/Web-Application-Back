@@ -6,7 +6,33 @@ import bodyParser from 'body-parser';
 import PostsRoute from './routes/posts_routes'; 
 import CommentsRoute from './routes/comments_routes'; 
 import AuthRoute from './routes/auth_routes';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+
 const app = express();
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true })); 
+app.use('/post', PostsRoute);
+app.use('/comment', CommentsRoute);
+app.use('/auth', AuthRoute); 
+
+const options ={
+    definition:{
+        openapi: '3.0.0',
+        info:{
+            title: 'Web Dev 2025 REST API',
+            version: '1.0.0',
+            description: 'REST server including authentication using JWT',
+        },
+        servers:[{url: 'http://localhost:3000',},],
+    },
+    apis: ['./src/routes/*.ts'],
+
+};
+const specs = swaggerJsdoc(options);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
 
 const initApp= async () =>{
     return new Promise<Express>((resolve,reject)=>{
@@ -22,14 +48,6 @@ const initApp= async () =>{
 
     }else{
     mongoose.connect(process.env.DB_CONNECTION).then(() => {
-        console.log('initApp finished');
-
-        app.use(bodyParser.json());
-        app.use(bodyParser.urlencoded({ extended: true })); 
-
-        app.use('/post', PostsRoute);
-        app.use('/comment', CommentsRoute);
-        app.use('/auth', AuthRoute); 
         resolve(app);
     }).catch((error) => {
         console.error('Error when trying to connect to the database:', error);
