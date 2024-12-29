@@ -1,5 +1,5 @@
 import { Request,Response} from 'express';
-import { Model } from 'mongoose';
+import mongoose ,{ Model } from 'mongoose';
 
 class BaseController<T> {
     model: Model<T>;
@@ -40,18 +40,23 @@ class BaseController<T> {
 
     //Handler to get a specific post by id
     async getById (req:Request,res:Response){
-        const id= req.params.id;
-        try{
-            const post=await this.model.findById(id);
-            console.log(post); 
-            if(post==null)
-                return res.status(404).send({message:'Post not found'});
+        const id = req.params.id;
+    
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).send({ message: 'Invalid ID format' });
+        }
+        try {
+            const post = await this.model.findById(id);
+            console.log(post);
+            if (post == null) {
+                return res.status(404).send({ message: 'Post not found' });
+            }
             return res.status(200).json(post);
+        } catch (error) {
+            console.error('Error fetching post:', error);
+            return res.status(500).send({ error: 'Internal server error' });
         }
-        catch(error){
-            return res.status(500).send(error);   
-        }
-    };
+    }
 
     async updateById(req: Request, res: Response) {
         const id = req.params.id;
@@ -91,10 +96,6 @@ class BaseController<T> {
         }
     }
 };
+export default BaseController;
 
-const createController = <T> (model: Model<T>) => {
-    return new BaseController(model);
-}
-
-export default createController;
     
