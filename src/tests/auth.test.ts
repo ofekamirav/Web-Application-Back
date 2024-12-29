@@ -129,6 +129,8 @@ describe("Auth Tests",()=>{
             name: userInfo.name,
         });
         expect(response.statusCode).toBe(200);
+        expect(response.body.accessToken).toBeDefined();
+        expect(response.body.refreshToken).toBeDefined();
         userInfo.accessToken = response.body.accessToken;
         userInfo.refreshToken = response.body.refreshToken;
 
@@ -165,6 +167,47 @@ describe("Auth Tests",()=>{
         expect(response.body.accessToken).not.toEqual(userInfo.accessToken);
     });
 
+    jest.setTimeout(20000);
+    test("Timeout on refresh access token", async() => {
+        const response = await request(app).post(baseURL + "/login")
+        .send({
+            email: userInfo.email,
+            password: userInfo.password,
+            name: userInfo.name,
+        });
+        expect(response.statusCode).toBe(200);
+        expect(response.body.accessToken).toBeDefined();
+        expect(response.body.refreshToken).toBeDefined();
+        userInfo.accessToken = response.body.accessToken;
+        userInfo.refreshToken = response.body.refreshToken;
 
+        await new Promise (resolve => setTimeout(resolve, 6000)); // wait for 6 seconds
+        const response2 = await request(app).post("/posts")
+        .set({ authorization: "JWT " + userInfo.accessToken })
+        // try to access with expired token (5sec expiration)- fail
+        .send({
+            title: "Post 1 - without token",
+            content: "Content of post 1", 
+            owner: "Nitzan Naveh"
+        })
+        expect(response2.statusCode).not.toBe(201); 
+          
+        const response3 = await request(app).post(baseURL + "/refresh")
+        .send({
+            refreshToken: userInfo.refreshToken
+        });
+        expect(response3.statusCode).toBe(200); 
+        userInfo.accessToken = response3.body.accessToken;
+        userInfo.refreshToken = response3.body.refreshToken;
+
+        const response4 = await request(app).post("/post")
+        .set({ authorization: "JWT " + userInfo.accessToken })
+        .send({
+            title: "Post 1 - without token",
+            content: "Content of post 1", 
+            owner: "Nitzan Naveh"
+        });
+        expect(response4.statusCode).toBe(201);
+    });
 });
 

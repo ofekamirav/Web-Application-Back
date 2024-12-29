@@ -36,7 +36,7 @@ beforeAll(async () => {
 
     await request(app).post("/auth/register").send(userInfo);
     const res = await request(app).post("/auth/login").send(userInfo);
-    userInfo.token = res.body.token;
+    userInfo.token = res.body.accessToken;
     userInfo.id = res.body._id;
     expect(userInfo.token).toBeDefined();
 });

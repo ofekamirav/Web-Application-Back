@@ -15,8 +15,8 @@ async function register(req: Request, res: Response) {
     try {
         const existingUser = await UserModel.findOne({ email });
         if (existingUser) {
-            res.status(400).send({ error: 'Email already in use' });
-            return;
+            res.status(400).send({ error: 'Email already in use' }); 
+             return;
         }
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
