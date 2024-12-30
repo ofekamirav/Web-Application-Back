@@ -69,7 +69,7 @@ router.get("/", (req, res) => {
 /**
  * @swagger
  * /comment:
- *   comment:
+ *   post:
  *     summary: Create a new comment
  *     description: Create a new comment
  *     tags:
@@ -85,13 +85,17 @@ router.get("/", (req, res) => {
  *             properties:
  *               comment:
  *                 type: string
- *                 description: The title of the comment
+ *                 description: The content of the comment
  *               postId:
  *                 type: string
- *                 description: The post id of the comment
+ *                 description: The post id associated with the comment
+ *               owner:
+ *                 type: string
+ *                 description: The owner id of the comment
  *             required:
  *               - comment
  *               - postId
+ *               - owner
  *     responses:
  *       201:
  *         description: Comment created successfully
@@ -106,19 +110,103 @@ router.get("/", (req, res) => {
  */
 router.post("/", authMiddleware, commentsController.create.bind(commentsController));
 
+/**
+ * @swagger
+ * /comment/{id}:
+ *   get:
+ *     summary: Get a comment by ID
+ *     description: Retrieve a comment by its ID
+ *     tags:
+ *       - Comments
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The ID of the comment
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A comment object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Comment'
+ *       404:
+ *         description: Comment not found
+ *       500:
+ *         description: Server error
+ */
 
 
 router.get("/:id", (req, res) => {
     commentsController.getById.bind(commentsController)(req, res);
 });
 
+/**
+ * @swagger
+ * /comment/{id}:
+ *   put:
+ *     summary: Update a comment by ID
+ *     description: Update a comment by its ID
+ *     tags:
+ *       - Comments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The ID of the comment
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Comment'
+ *     responses:
+ *       200:
+ *         description: Comment updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ */
 
 
 router.put("/:id", authMiddleware, (req, res) => {
     commentsController.updateById.bind(commentsController)(req, res);
 });
 
-
+/**
+ * @swagger
+ * /comment/{id}:
+ *   delete:
+ *     summary: Delete a comment by ID
+ *     description: Delete a comment by its ID
+ *     tags:
+ *       - Comments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The ID of the comment
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Comment deleted successfully
+ *       500:
+ *         description: Server error
+ */
 
 router.delete("/:id", authMiddleware, (req, res) => {
     commentsController.deleteById.bind(commentsController)(req, res);

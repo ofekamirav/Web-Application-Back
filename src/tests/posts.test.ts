@@ -118,6 +118,22 @@ describe("Posts Tests",()=>{
         const response2 = await request(app).get("/post/" + postID); // try to delete the post again
         expect(response2.statusCode).toBe(404); 
     });
+    test("Test getAll posts when there are no posts", async () => {
+        await Post.deleteMany({});//delete all posts
+        const response = await request(app).get("/post");
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toHaveLength(0);
+    });
+    test("Test update post with not existing id", async () => {
+        const response = await request(app).put("/post/1")
+        .set({ authorization: "JWT " + userInfo.token })
+        .send({
+            title: "Post Updated",
+            content: "Content of updated post", 
+            })
+        expect(response.statusCode).toBe(500);
+
+    });
 });
 
 afterAll(async () => {

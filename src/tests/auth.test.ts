@@ -209,5 +209,57 @@ describe("Auth Tests",()=>{
         });
         expect(response4.statusCode).toBe(201);
     });
+
+    test("Test Register with missing fields", async () => {
+        const response = await request(app).post(baseURL + "/register").send({
+            email: userInfo.email,
+            name: userInfo.name,
+        });
+        expect(response.statusCode).not.toBe(200);
+    });
+
+    test("Test Login with missing fields", async () => {
+        const response = await request(app).post(baseURL + "/login").send({
+            email: userInfo.email,
+        });
+        expect(response.statusCode).not.toBe(200);
+    });
+    test("Test Register with existing email", async () => {
+        const response = await request(app).post(baseURL + "/register").send(userInfo);
+        expect(response.statusCode).not.toBe(200);
+    });
+   test("Test Login with wrong password", async () => {
+        const response = await request(app).post(baseURL + "/login").send({
+            email: userInfo.email,
+            password: "12345679",
+        });
+        expect(response.statusCode).not.toBe(200);
+    });
+    test("Test Login with unregistered email", async () => {
+        const response = await request(app).post(baseURL + "/login").send({
+            email: "bobi1234@mail.com",
+            password: "12345678",
+        });
+        expect(response.statusCode).not.toBe(200);
+    });
+    test("Test authMiddleware with invalid token", async () => {
+        const response = await request(app).post("/post")
+            .set({ authorization: "JWT invalidtoken123" })
+            .send({ title: "Test post" });
+        expect(response.statusCode).toBe(403);
+        expect(response.body.error).toBe("Invalid token");
+    });
+    test("Test refreshTokens array in user model", async () => {
+        const loginResponse = await request(app).post(baseURL + "/login").send(userInfo);
+        const { refreshToken } = loginResponse.body;
+    
+        const user = await UserModel.findOne({ email: userInfo.email });
+        if(user === null) {
+            throw new Error("User not found");
+        }
+        expect(user.refreshTokens).toContain(refreshToken);
+    });
+    
+    
 });
 

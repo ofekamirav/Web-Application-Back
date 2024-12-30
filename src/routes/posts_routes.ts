@@ -109,6 +109,42 @@ router.get('/', async (req, res) => {
 
 router.post("/", authMiddleware, postController.create.bind(postController));
 
+/**
+ * @swagger
+ * /post/{id}:
+ *   put:
+ *     summary: Update a post by ID
+ *     description: Update a post by its ID
+ *     tags:
+ *       - Posts
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The ID of the post
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Post'
+ *     responses:
+ *       200:
+ *         description: Comment updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ */
+
 
 router.put("/:id", authMiddleware, (req: Request, res: Response) => {
     postController.updateById.bind(postController)(req, res);

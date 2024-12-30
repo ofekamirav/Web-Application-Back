@@ -89,4 +89,18 @@ describe("Comments test suite", () => {
         console.log(response.body);
         expect(response.status).toBe(404); 
     });
+    test("Test update comment", async () => {
+        const response = await request(app).put("/comment/" + commentId)
+            .set({ authorization: "JWT " + userInfo.token })
+            .send({ comment: "Updated comment" });
+        expect(response.status).toBe(200);
+        expect(response.body.comment).toBe("Updated comment");
+    });
+    test("Test delete comment", async () => {
+        const response = await request(app).delete("/comment/" + commentId)
+            .set({ authorization: "JWT " + userInfo.token });
+        expect(response.status).toBe(200);
+        const response2 = await request(app).get("/comment/" + commentId);
+        expect(response2.status).toBe(404);
+    });
 });

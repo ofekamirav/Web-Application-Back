@@ -21,7 +21,7 @@ POST http://localhost:3000/comment
 Content-Type: application/json
 
 {
-    "post_id":"67598de468bbc81ed8af409f",
+    "post_id":"67712f24ef8ac1a042f90e94",
     "content":"First comment on this post",
     "owner":"Ofek A",
     "date":"22.11.2024"
@@ -30,7 +30,7 @@ Content-Type: application/json
 ###
 
 #Get all comments of specific post
-GET http://localhost:3000/comment/67436f4c5b95d41915b19ebf
+GET http://localhost:3000/comment/67712f24ef8ac1a042f90e94
 
 ###
 

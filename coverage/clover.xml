@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1735466790154" clover="3.2.0">
-  <project timestamp="1735466790155" name="All files">
-    <metrics statements="276" coveredstatements="211" conditionals="45" coveredconditionals="21" methods="40" coveredmethods="36" elements="361" coveredelements="268" complexity="0" loc="276" ncloc="276" packages="4" files="11" classes="11"/>
+<coverage generated="1735584743182" clover="3.2.0">
+  <project timestamp="1735584743182" name="All files">
+    <metrics statements="280" coveredstatements="226" conditionals="45" coveredconditionals="25" methods="40" coveredmethods="38" elements="365" coveredelements="289" complexity="0" loc="280" ncloc="280" packages="4" files="11" classes="11"/>
     <package name="src">
-      <metrics statements="29" coveredstatements="25" conditionals="2" coveredconditionals="1" methods="7" coveredmethods="5"/>
+      <metrics statements="33" coveredstatements="29" conditionals="2" coveredconditionals="1" methods="7" coveredmethods="5"/>
       <file name="server.ts" path="C:\Users\ofeka\Documents\מדעי המחשב\Year C\Semester A\web application\Assignments\assignment\Web-Application-First-assignment\src\server.ts">
-        <metrics statements="29" coveredstatements="25" conditionals="2" coveredconditionals="1" methods="7" coveredmethods="5"/>
+        <metrics statements="33" coveredstatements="29" conditionals="2" coveredconditionals="1" methods="7" coveredmethods="5"/>
         <line num="1" count="3" type="stmt"/>
         <line num="2" count="3" type="stmt"/>
         <line num="3" count="3" type="stmt"/>
@@ -15,46 +15,50 @@
         <line num="7" count="3" type="stmt"/>
         <line num="8" count="3" type="stmt"/>
         <line num="9" count="3" type="stmt"/>
-        <line num="11" count="3" type="stmt"/>
+        <line num="10" count="3" type="stmt"/>
         <line num="12" count="3" type="stmt"/>
-        <line num="13" count="3" type="stmt"/>
         <line num="14" count="3" type="stmt"/>
         <line num="15" count="3" type="stmt"/>
         <line num="16" count="3" type="stmt"/>
-        <line num="19" count="3" type="cond" truecount="1" falsecount="1"/>
-        <line num="20" count="0" type="stmt"/>
-        <line num="21" count="0" type="stmt"/>
-        <line num="24" count="3" type="stmt"/>
-        <line num="25" count="3" type="stmt"/>
-        <line num="27" count="3" type="stmt"/>
-        <line num="28" count="3" type="stmt"/>
-        <line num="30" count="3" type="stmt"/>
-        <line num="31" count="3" type="stmt"/>
-        <line num="32" count="3" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="20" count="3" type="stmt"/>
         <line num="33" count="3" type="stmt"/>
-        <line num="35" count="0" type="stmt"/>
-        <line num="36" count="0" type="stmt"/>
+        <line num="34" count="3" type="stmt"/>
+        <line num="37" count="3" type="stmt"/>
+        <line num="38" count="3" type="stmt"/>
+        <line num="39" count="3" type="stmt"/>
+        <line num="40" count="3" type="stmt"/>
         <line num="41" count="3" type="stmt"/>
+        <line num="42" count="3" type="stmt"/>
+        <line num="45" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="47" count="0" type="stmt"/>
+        <line num="50" count="3" type="stmt"/>
+        <line num="51" count="3" type="stmt"/>
+        <line num="53" count="0" type="stmt"/>
+        <line num="54" count="0" type="stmt"/>
+        <line num="59" count="3" type="stmt"/>
       </file>
     </package>
     <package name="src.controllers">
-      <metrics statements="197" coveredstatements="138" conditionals="41" coveredconditionals="18" methods="24" coveredmethods="24"/>
+      <metrics statements="197" coveredstatements="147" conditionals="41" coveredconditionals="22" methods="24" coveredmethods="24"/>
       <file name="auth_controller.ts" path="C:\Users\ofeka\Documents\מדעי המחשב\Year C\Semester A\web application\Assignments\assignment\Web-Application-First-assignment\src\controllers\auth_controller.ts">
-        <metrics statements="132" coveredstatements="88" conditionals="33" coveredconditionals="15" methods="15" coveredmethods="15"/>
+        <metrics statements="132" coveredstatements="96" conditionals="33" coveredconditionals="19" methods="15" coveredmethods="15"/>
         <line num="2" count="3" type="stmt"/>
         <line num="3" count="3" type="stmt"/>
         <line num="4" count="3" type="stmt"/>
-        <line num="8" count="4" type="stmt"/>
-        <line num="9" count="4" type="stmt"/>
-        <line num="10" count="4" type="stmt"/>
-        <line num="11" count="4" type="cond" truecount="3" falsecount="1"/>
-        <line num="12" count="0" type="stmt"/>
-        <line num="13" count="0" type="stmt"/>
-        <line num="15" count="4" type="stmt"/>
-        <line num="16" count="4" type="stmt"/>
-        <line num="17" count="4" type="cond" truecount="1" falsecount="0"/>
-        <line num="18" count="1" type="stmt"/>
-        <line num="19" count="1" type="stmt"/>
+        <line num="8" count="6" type="stmt"/>
+        <line num="9" count="6" type="stmt"/>
+        <line num="10" count="6" type="stmt"/>
+        <line num="11" count="6" type="cond" truecount="4" falsecount="0"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="15" count="5" type="stmt"/>
+        <line num="16" count="5" type="stmt"/>
+        <line num="17" count="5" type="cond" truecount="1" falsecount="0"/>
+        <line num="18" count="2" type="stmt"/>
+        <line num="19" count="2" type="stmt"/>
         <line num="21" count="3" type="stmt"/>
         <line num="22" count="3" type="stmt"/>
         <line num="24" count="3" type="stmt"/>
@@ -64,36 +68,36 @@
         <line num="33" count="0" type="stmt"/>
         <line num="34" count="0" type="stmt"/>
         <line num="38" count="3" type="stmt"/>
-        <line num="39" count="9" type="cond" truecount="0" falsecount="1"/>
+        <line num="39" count="10" type="cond" truecount="0" falsecount="1"/>
         <line num="40" count="0" type="stmt"/>
-        <line num="42" count="9" type="stmt"/>
-        <line num="43" count="9" type="stmt"/>
-        <line num="51" count="9" type="stmt"/>
-        <line num="58" count="9" type="stmt"/>
-        <line num="62" count="6" type="stmt"/>
-        <line num="63" count="6" type="stmt"/>
-        <line num="64" count="6" type="cond" truecount="2" falsecount="1"/>
-        <line num="65" count="0" type="stmt"/>
-        <line num="66" count="0" type="stmt"/>
-        <line num="68" count="6" type="stmt"/>
-        <line num="69" count="6" type="stmt"/>
-        <line num="70" count="6" type="cond" truecount="0" falsecount="1"/>
-        <line num="71" count="0" type="stmt"/>
-        <line num="72" count="0" type="stmt"/>
-        <line num="74" count="6" type="stmt"/>
-        <line num="75" count="6" type="cond" truecount="0" falsecount="1"/>
-        <line num="76" count="0" type="stmt"/>
-        <line num="77" count="0" type="stmt"/>
-        <line num="79" count="6" type="stmt"/>
-        <line num="80" count="6" type="stmt"/>
-        <line num="81" count="6" type="cond" truecount="0" falsecount="1"/>
+        <line num="42" count="10" type="stmt"/>
+        <line num="43" count="10" type="stmt"/>
+        <line num="51" count="10" type="stmt"/>
+        <line num="58" count="10" type="stmt"/>
+        <line num="62" count="10" type="stmt"/>
+        <line num="63" count="10" type="stmt"/>
+        <line num="64" count="10" type="cond" truecount="3" falsecount="0"/>
+        <line num="65" count="1" type="stmt"/>
+        <line num="66" count="1" type="stmt"/>
+        <line num="68" count="9" type="stmt"/>
+        <line num="69" count="9" type="stmt"/>
+        <line num="70" count="9" type="cond" truecount="1" falsecount="0"/>
+        <line num="71" count="1" type="stmt"/>
+        <line num="72" count="1" type="stmt"/>
+        <line num="74" count="8" type="stmt"/>
+        <line num="75" count="8" type="cond" truecount="1" falsecount="0"/>
+        <line num="76" count="1" type="stmt"/>
+        <line num="77" count="1" type="stmt"/>
+        <line num="79" count="7" type="stmt"/>
+        <line num="80" count="7" type="stmt"/>
+        <line num="81" count="7" type="cond" truecount="0" falsecount="1"/>
         <line num="82" count="0" type="stmt"/>
         <line num="83" count="0" type="stmt"/>
-        <line num="86" count="6" type="cond" truecount="0" falsecount="1"/>
+        <line num="86" count="7" type="cond" truecount="0" falsecount="1"/>
         <line num="87" count="0" type="stmt"/>
-        <line num="89" count="6" type="stmt"/>
-        <line num="90" count="6" type="stmt"/>
-        <line num="92" count="6" type="stmt"/>
+        <line num="89" count="7" type="stmt"/>
+        <line num="90" count="7" type="stmt"/>
+        <line num="92" count="7" type="stmt"/>
         <line num="99" count="0" type="stmt"/>
         <line num="103" count="3" type="stmt"/>
         <line num="104" count="1" type="stmt"/>
@@ -157,37 +161,37 @@
         <line num="178" count="3" type="stmt"/>
         <line num="185" count="0" type="stmt"/>
         <line num="193" count="3" type="stmt"/>
-        <line num="195" count="11" type="stmt"/>
-        <line num="196" count="11" type="cond" truecount="2" falsecount="0"/>
-        <line num="197" count="11" type="cond" truecount="1" falsecount="0"/>
+        <line num="195" count="15" type="stmt"/>
+        <line num="196" count="15" type="cond" truecount="2" falsecount="0"/>
+        <line num="197" count="15" type="cond" truecount="1" falsecount="0"/>
         <line num="198" count="1" type="stmt"/>
         <line num="199" count="1" type="stmt"/>
-        <line num="201" count="10" type="cond" truecount="0" falsecount="1"/>
+        <line num="201" count="14" type="cond" truecount="0" falsecount="1"/>
         <line num="202" count="0" type="stmt"/>
         <line num="203" count="0" type="stmt"/>
-        <line num="206" count="10" type="stmt"/>
-        <line num="207" count="10" type="cond" truecount="1" falsecount="0"/>
-        <line num="208" count="1" type="stmt"/>
-        <line num="209" count="1" type="stmt"/>
-        <line num="211" count="9" type="stmt"/>
-        <line num="212" count="9" type="stmt"/>
+        <line num="206" count="14" type="stmt"/>
+        <line num="207" count="14" type="cond" truecount="1" falsecount="0"/>
+        <line num="208" count="2" type="stmt"/>
+        <line num="209" count="2" type="stmt"/>
+        <line num="211" count="12" type="stmt"/>
+        <line num="212" count="12" type="stmt"/>
         <line num="216" count="3" type="stmt"/>
         <line num="218" count="3" type="stmt"/>
       </file>
       <file name="base_controller.ts" path="C:\Users\ofeka\Documents\מדעי המחשב\Year C\Semester A\web application\Assignments\assignment\Web-Application-First-assignment\src\controllers\base_controller.ts">
-        <metrics statements="53" coveredstatements="38" conditionals="8" coveredconditionals="3" methods="7" coveredmethods="7"/>
+        <metrics statements="53" coveredstatements="39" conditionals="8" coveredconditionals="3" methods="7" coveredmethods="7"/>
         <line num="2" count="3" type="stmt"/>
         <line num="7" count="6" type="stmt"/>
-        <line num="11" count="2" type="stmt"/>
-        <line num="12" count="2" type="stmt"/>
-        <line num="13" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="13" count="3" type="cond" truecount="1" falsecount="1"/>
         <line num="14" count="0" type="stmt"/>
         <line num="15" count="0" type="stmt"/>
         <line num="16" count="0" type="cond" truecount="0" falsecount="1"/>
         <line num="17" count="0" type="stmt"/>
         <line num="18" count="0" type="stmt"/>
-        <line num="21" count="2" type="stmt"/>
-        <line num="22" count="2" type="stmt"/>
+        <line num="21" count="3" type="stmt"/>
+        <line num="22" count="3" type="stmt"/>
         <line num="25" count="0" type="stmt"/>
         <line num="26" count="0" type="stmt"/>
         <line num="31" count="7" type="stmt"/>
@@ -196,30 +200,30 @@
         <line num="34" count="5" type="stmt"/>
         <line num="36" count="2" type="stmt"/>
         <line num="37" count="2" type="stmt"/>
-        <line num="43" count="4" type="stmt"/>
-        <line num="45" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="43" count="5" type="stmt"/>
+        <line num="45" count="5" type="cond" truecount="1" falsecount="0"/>
         <line num="46" count="1" type="stmt"/>
-        <line num="48" count="3" type="stmt"/>
-        <line num="49" count="3" type="stmt"/>
-        <line num="50" count="3" type="stmt"/>
-        <line num="51" count="3" type="cond" truecount="1" falsecount="0"/>
-        <line num="52" count="1" type="stmt"/>
+        <line num="48" count="4" type="stmt"/>
+        <line num="49" count="4" type="stmt"/>
+        <line num="50" count="4" type="stmt"/>
+        <line num="51" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="52" count="2" type="stmt"/>
         <line num="54" count="2" type="stmt"/>
         <line num="56" count="0" type="stmt"/>
         <line num="57" count="0" type="stmt"/>
-        <line num="62" count="1" type="stmt"/>
-        <line num="63" count="1" type="stmt"/>
-        <line num="64" count="1" type="stmt"/>
-        <line num="65" count="1" type="cond" truecount="0" falsecount="1"/>
+        <line num="62" count="3" type="stmt"/>
+        <line num="63" count="3" type="stmt"/>
+        <line num="64" count="3" type="stmt"/>
+        <line num="65" count="2" type="cond" truecount="0" falsecount="1"/>
         <line num="66" count="0" type="stmt"/>
-        <line num="68" count="1" type="stmt"/>
-        <line num="70" count="0" type="stmt"/>
-        <line num="75" count="1" type="stmt"/>
-        <line num="76" count="1" type="stmt"/>
-        <line num="77" count="1" type="stmt"/>
-        <line num="78" count="1" type="cond" truecount="0" falsecount="1"/>
+        <line num="68" count="2" type="stmt"/>
+        <line num="70" count="1" type="stmt"/>
+        <line num="75" count="2" type="stmt"/>
+        <line num="76" count="2" type="stmt"/>
+        <line num="77" count="2" type="stmt"/>
+        <line num="78" count="2" type="cond" truecount="0" falsecount="1"/>
         <line num="79" count="0" type="stmt"/>
-        <line num="81" count="1" type="stmt"/>
+        <line num="81" count="2" type="stmt"/>
         <line num="83" count="0" type="stmt"/>
         <line num="88" count="1" type="stmt"/>
         <line num="89" count="1" type="stmt"/>
@@ -233,9 +237,9 @@
       <file name="comments_controller.ts" path="C:\Users\ofeka\Documents\מדעי המחשב\Year C\Semester A\web application\Assignments\assignment\Web-Application-First-assignment\src\controllers\comments_controller.ts">
         <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="1" count="3" type="stmt"/>
-        <line num="3" count="3" type="stmt"/>
-        <line num="5" count="3" type="stmt"/>
-        <line num="7" count="3" type="stmt"/>
+        <line num="2" count="3" type="stmt"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="6" count="3" type="stmt"/>
       </file>
       <file name="posts_controller.ts" path="C:\Users\ofeka\Documents\מדעי המחשב\Year C\Semester A\web application\Assignments\assignment\Web-Application-First-assignment\src\controllers\posts_controller.ts">
         <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
@@ -274,34 +278,34 @@
       </file>
     </package>
     <package name="src.routes">
-      <metrics statements="38" coveredstatements="36" conditionals="2" coveredconditionals="2" methods="9" coveredmethods="7"/>
+      <metrics statements="38" coveredstatements="38" conditionals="2" coveredconditionals="2" methods="9" coveredmethods="9"/>
       <file name="auth_routes.ts" path="C:\Users\ofeka\Documents\מדעי המחשב\Year C\Semester A\web application\Assignments\assignment\Web-Application-First-assignment\src\routes\auth_routes.ts">
         <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="1" count="3" type="stmt"/>
         <line num="2" count="3" type="stmt"/>
         <line num="4" count="3" type="stmt"/>
-        <line num="6" count="3" type="stmt"/>
-        <line num="8" count="3" type="stmt"/>
-        <line num="10" count="3" type="stmt"/>
-        <line num="12" count="3" type="stmt"/>
-        <line num="14" count="3" type="stmt"/>
+        <line num="92" count="3" type="stmt"/>
+        <line num="130" count="3" type="stmt"/>
+        <line num="172" count="3" type="stmt"/>
+        <line num="201" count="3" type="stmt"/>
+        <line num="203" count="3" type="stmt"/>
       </file>
       <file name="comments_routes.ts" path="C:\Users\ofeka\Documents\מדעי המחשב\Year C\Semester A\web application\Assignments\assignment\Web-Application-First-assignment\src\routes\comments_routes.ts">
-        <metrics statements="14" coveredstatements="12" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="2"/>
+        <metrics statements="14" coveredstatements="14" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="4"/>
         <line num="1" count="3" type="stmt"/>
         <line num="2" count="3" type="stmt"/>
         <line num="3" count="3" type="stmt"/>
         <line num="4" count="3" type="stmt"/>
-        <line num="6" count="3" type="stmt"/>
-        <line num="7" count="1" type="stmt"/>
-        <line num="10" count="3" type="stmt"/>
-        <line num="12" count="3" type="stmt"/>
-        <line num="13" count="2" type="stmt"/>
-        <line num="16" count="3" type="stmt"/>
-        <line num="17" count="0" type="stmt"/>
-        <line num="20" count="3" type="stmt"/>
-        <line num="21" count="0" type="stmt"/>
-        <line num="24" count="3" type="stmt"/>
+        <line num="65" count="3" type="stmt"/>
+        <line num="66" count="1" type="stmt"/>
+        <line num="111" count="3" type="stmt"/>
+        <line num="142" count="3" type="stmt"/>
+        <line num="143" count="3" type="stmt"/>
+        <line num="183" count="3" type="stmt"/>
+        <line num="184" count="1" type="stmt"/>
+        <line num="211" count="3" type="stmt"/>
+        <line num="212" count="1" type="stmt"/>
+        <line num="215" count="3" type="stmt"/>
       </file>
       <file name="posts_routes.ts" path="C:\Users\ofeka\Documents\מדעי המחשב\Year C\Semester A\web application\Assignments\assignment\Web-Application-First-assignment\src\routes\posts_routes.ts">
         <metrics statements="16" coveredstatements="16" conditionals="2" coveredconditionals="2" methods="5" coveredmethods="5"/>
@@ -309,18 +313,18 @@
         <line num="2" count="3" type="stmt"/>
         <line num="3" count="3" type="stmt"/>
         <line num="4" count="3" type="stmt"/>
-        <line num="6" count="3" type="stmt"/>
-        <line num="7" count="2" type="cond" truecount="2" falsecount="0"/>
-        <line num="8" count="1" type="stmt"/>
-        <line num="10" count="1" type="stmt"/>
-        <line num="14" count="3" type="stmt"/>
-        <line num="16" count="3" type="stmt"/>
-        <line num="17" count="1" type="stmt"/>
-        <line num="20" count="3" type="stmt"/>
-        <line num="21" count="2" type="stmt"/>
-        <line num="24" count="3" type="stmt"/>
-        <line num="25" count="1" type="stmt"/>
-        <line num="28" count="3" type="stmt"/>
+        <line num="63" count="3" type="stmt"/>
+        <line num="64" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="65" count="1" type="stmt"/>
+        <line num="67" count="2" type="stmt"/>
+        <line num="110" count="3" type="stmt"/>
+        <line num="149" count="3" type="stmt"/>
+        <line num="150" count="2" type="stmt"/>
+        <line num="181" count="3" type="stmt"/>
+        <line num="182" count="2" type="stmt"/>
+        <line num="211" count="3" type="stmt"/>
+        <line num="212" count="1" type="stmt"/>
+        <line num="215" count="3" type="stmt"/>
       </file>
     </package>
   </project>
