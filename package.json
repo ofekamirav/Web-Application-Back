@@ -1,7 +1,7 @@
 {
   "name": "web-application-first-assignment",
   "version": "1.0.0",
-  "description": "First assignment to practice REST API request using Nodejs and Express.",
+  "description": "Backend services for RecipeHub web application.",
   "main": "index.js",
   "scripts": {
     "start": "tsc && node ./dist/src/app.js",
@@ -17,7 +17,7 @@
     "type": "git",
     "url": "https://github.com/ofekamirav/Web-Application-First-assignment"
   },
-  "author": "Ofek Amirav, Nitzan Naveh",
+  "author": "Ofek Amirav",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",

@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
-import PostsRoute from './routes/posts_routes'; 
+import RecipesRoutes from './routes/recipes_routes'; 
 import CommentsRoute from './routes/comments_routes'; 
 import AuthRoute from './routes/auth_routes';
 import swaggerJsdoc from 'swagger-jsdoc';
@@ -13,15 +13,15 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); 
-app.use('/post', PostsRoute);
-app.use('/comment', CommentsRoute);
+app.use('/recipes', RecipesRoutes);
+app.use('/comments', CommentsRoute);
 app.use('/auth', AuthRoute); 
 
 const options ={
     definition:{
         openapi: '3.0.0',
         info:{
-            title: 'Web Dev 2025 REST API',
+            title: 'RecipeHub API',
             version: '1.0.0',
             description: 'REST server including authentication using JWT',
         },

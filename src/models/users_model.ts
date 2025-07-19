@@ -14,20 +14,16 @@ const userSchema = new mongoose.Schema(
             type: String, 
             required: true 
         },
-        posts: [{ 
-            type: mongoose.Schema.Types.ObjectId, 
-            ref: 'Post' 
-        }],
-        comments: [{ 
-            type: mongoose.Schema.Types.ObjectId, 
-            ref: 'Comment' 
-        }],
+        profilePicture: {
+            type: String, 
+            default: 'default-profile-picture.png' 
+        },
         refreshTokens: {
             type: [String],
             default: []
-        }
-    });
+        }   
+    }, { timestamps: true }); 
 
-const User = mongoose.model('UserModel', userSchema);
+const User = mongoose.model('Users', userSchema);
 
 export default User;

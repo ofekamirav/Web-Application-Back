@@ -1,218 +1,250 @@
-import { NextFunction, Request,Response} from 'express';
-import  UserModel  from "../models/users_model";
+import { NextFunction, Request, Response } from 'express';
+import UserModel from "../models/users_model"; 
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-async function register(req: Request, res: Response) {
-    
-    const email = req.body.email;
-    const password = req.body.password;
-    const name = req.body.name;
-    if (!email || !password || !name) {
-        res.status(400).send({ error: 'missing required fields' });
-        return;
-    }
-    try {
-        const existingUser = await UserModel.findOne({ email });
-        if (existingUser) {
-            res.status(400).send({ error: 'Email already in use' }); 
-             return;
-        }
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
 
-        const user = await UserModel.create({
-            name: name,
-            email: email,
-            password: hashedPassword,
-        }); 
-        res.status(200).send(user);
-        return;
-    } catch (error) {
-        console.error('Error creating user:', error);
-        res.status(400).send(error);
-        return;
-    }
-}
 
 const generateTokens = (_id: string): { accessToken: string, refreshToken: string } | null => {
-    if(!process.env.ACCESS_TOKEN_SECRET){
+    if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
+        console.error("FATAL ERROR: Token secrets are not defined in .env file.");
         return null;
-    } 
-    const random = Math.floor(Math.random() * 1000000); 
+    }
+
     const accessToken = jwt.sign(
-        { 
-            _id: _id,
-            random: random, 
-         }, 
+        { _id }, 
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: process.env.TOKEN_EXPIRATION });
-    
+        { expiresIn: process.env.ACCESS_TOKEN_EXPIRATION || '15m' } // 15 minutes
+    );
+
     const refreshToken = jwt.sign(
-        { 
-            _id: _id,
-            random: random 
-        }, 
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION });  
+        { _id },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || '7d' } // 7 days
+    ); 
+
     return { accessToken, refreshToken };
 }
 
-async function login(req: Request, res: Response) {
-    const email = req.body.email;
-    const password = req.body.password;
-    if (!email || !password) {
-        res.status(400).send({ error: 'missing required fields' });
+async function register(req: Request, res: Response) {
+    const { email, password, name } = req.body;
+
+    if (!email || !password || !name) {
+        res.status(400).send({ message: 'Name, email, and password are required.' });
         return;
     }
+    
+    if (password.length < 6) {
+        res.status(400).send({ message: 'Password must be at least 6 characters long.' });
+        return;
+    }
+    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        res.status(400).send({ message: 'Invalid email format.' });
+        return;
+    }
+    
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(password)) {
+        res.status(400).send({ message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
+        return; 
+    }
+
+    try {
+        const existingUser = await UserModel.findOne({ email });
+        if (existingUser) {
+            res.status(409).send({ message: 'Email already in use.' });
+            return;
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newUser = new UserModel({
+            name,
+            email,
+            password: hashedPassword,
+        });
+        
+        await newUser.save();
+
+        const tokens = generateTokens(newUser._id.toString());
+        if (!tokens) {
+            res.status(500).send({ message: 'Could not generate tokens due to server configuration error.' });
+            return;
+        }
+
+        newUser.refreshTokens = newUser.refreshTokens || [];
+        newUser.refreshTokens.push(tokens.refreshToken);
+        await newUser.save();
+
+        res.status(201).send({
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            user: {
+                _id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+            }
+        });
+
+    } catch (error) {
+        console.error('Error during registration:', error);
+        res.status(500).send({ message: 'An internal server error occurred.' });
+    }
+}
+
+async function login(req: Request, res: Response) {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        res.status(400).send({ message: 'Email and password are required.' });
+        return;
+    }
+      if (password.length < 6) {
+        res.status(400).send({ message: 'Password must be at least 6 characters long.' });
+        return;
+    }
+    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        res.status(400).send({ message: 'Invalid email format.' });
+        return;
+    }
+    
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(password)) {
+        res.status(400).send({ message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
+        return; 
+    }
+
     try {
         const user = await UserModel.findOne({ email });
         if (!user) {
-            res.status(400).send({ error: 'Email not registered' });
+            res.status(401).send({ message: 'Invalid credentials.' });
             return;
         }
-        const match = await bcrypt.compare(password, user.password);
-        if (!match) {
-            res.status(400).send({ error: 'Wrong email or password' });
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            res.status(401).send({ message: 'Invalid credentials.' });
             return;
         }
-        const userId = user._id.toString();
-        const tokens = generateTokens(userId);
+
+        const tokens = generateTokens(user._id.toString());
         if (!tokens) {
-            res.status(400).send({ error: 'Missing auth configuration' });
+            res.status(500).send({ message: 'Could not generate tokens due to server configuration error.' });
             return;
         }
-              
-        if (!user.refreshTokens) {
-            user.refreshTokens = [];
-        }
-        user.refreshTokens.push(tokens.refreshToken);;
+
+        user.refreshTokens = user.refreshTokens || [];
+        user.refreshTokens.push(tokens.refreshToken);
         await user.save();
 
-        res.status(200).send({ 
-            email: user.email,
-            _id: user._id,
+        res.status(200).send({
             accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken
+            refreshToken: tokens.refreshToken,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+            }
         });
-    } catch (error) {
-        res.status(400).send(error);
-    }
-}
 
-const logout = async (req: Request, res: Response) => {
-    const refreshToken = req.body.refreshToken;
-    if (!refreshToken) {
-        res.status(400).send({ error: 'missing refresh token' });
-        return;
+    } catch (error) {
+        console.error('Error during login:', error);
+        res.status(500).send({ message: 'An internal server error occurred.' });
     }
-  if (!process.env.ACCESS_TOKEN_SECRET) {
-        res.status(400).send({ error: 'Missing auth configuration' });
-        return;
-    }
-    jwt.verify(refreshToken, process.env.ACCESS_TOKEN_SECRET, async (err: any, payload: any) => {
-        if (err) {
-            res.status(403).send({ error: 'Invalid token' });
-            return;
-        }
-        const userId = (payload as Payload)._id;
-        try{
-            const user = await UserModel.findOne({ _id: userId });
-            if (!user) {
-                res.status(400).send({ error: 'User not found' });
-                return;
-            }
-            if (!user.refreshTokens || !user.refreshTokens.includes(refreshToken)) {
-                res.status(400).send({ error: 'Invalid refresh token' });
-                user.refreshTokens = []; // delete all user tokens 
-                await user.save();
-                return;
-            }
-            user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
-            await user.save();
-            res.status(200).send({ message: 'Logged out' });
-        } catch (error) {
-            res.status(400).send(error);
-        }    
-    });
 }
 
 const refresh = async (req: Request, res: Response) => {
-    const refreshToken = req.body.refreshToken;
+    const { refreshToken } = req.body;
+
     if (!refreshToken) {
-        res.status(400).send({ error: 'missing refresh token' });
+        res.status(401).send({ message: 'Refresh token is required.' });
+        return;
+    }
+    if (!process.env.REFRESH_TOKEN_SECRET) {
+        res.status(500).send({ message: 'Server configuration error.' });
+        return;
+    }
+
+    try {
+        const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET) as { _id: string };
+        const userId = payload._id;
+
+        const user = await UserModel.findById(userId);
+        if (!user || !user.refreshTokens?.includes(refreshToken)) {
+            if (user) {
+                user.refreshTokens = [];
+                await user.save();
+            }
+            res.status(403).send({ message: 'Invalid refresh token. Please log in again.' });
+            return;
+        }
+
+        const newTokens = generateTokens(userId);
+        if (!newTokens) {
+            res.status(500).send({ message: 'Could not generate tokens due to server configuration error.' });
+            return;
+        }
+
+        user.refreshTokens = user.refreshTokens.filter(token => token !== refreshToken);
+        user.refreshTokens.push(newTokens.refreshToken);
+        await user.save();
+
+        res.status(200).send({
+            accessToken: newTokens.accessToken,
+            refreshToken: newTokens.refreshToken,
+        });
+
+    } catch (error) {
+        console.error('Error during token refresh:', error);
+        res.status(403).send({ message: 'Invalid or expired refresh token. Please log in again.' });
+    }
+};
+
+
+const logout = async (req: Request, res: Response) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+        res.status(400).send({ message: 'Refresh token is required.' });
+        return;
+    }
+  
+    try {
+        await UserModel.updateOne(
+            { refreshTokens: refreshToken }, 
+            { $pull: { refreshTokens: refreshToken } }
+        );
+        res.status(204).send(); 
+
+    } catch (error) {
+        console.error('Error during logout:', error);
+        res.status(500).send({ message: 'An internal server error occurred.' });
+    }
+};
+
+export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; 
+    if (!token) {
+        res.status(401).send({ message: 'Access denied. No token provided.' });
         return;
     }
     if (!process.env.ACCESS_TOKEN_SECRET) {
-        res.status(400).send({ error: 'Missing auth configuration' });
+        res.status(500).send({ message: 'Server configuration error.' });
         return;
     }
-    jwt.verify(refreshToken, process.env.ACCESS_TOKEN_SECRET, async (err: any, payload: any) => {
-        if (err) {
-            res.status(403).send({ error: 'Invalid token' });
-            return;
-        }
-        const userId = (payload as Payload)._id;
-        try {
-            const user = await UserModel.findOne({ _id: userId });
-            if (!user) {
-                res.status(400).send({ error: 'User not found' });
-                return;
-            }
-            if (!user.refreshTokens || !user.refreshTokens.includes(refreshToken)) {
-                res.status(400).send({ error: 'Invalid refresh token' });
-                user.refreshTokens = []; // delete all user tokens
-                await user.save();
-                return;
-            }
-            const newTokens = generateTokens(userId.toString());
-            if (!newTokens) {
-                user.refreshTokens = []; 
-                await user.save();
-                res.status(400).send({ error: 'Missing auth configuration' });
-                return;
-            }
-            user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken); // delete the old refresh token
-            user.refreshTokens.push(newTokens.refreshToken); // save the new refresh token
-            await user.save(); 
-            res.status(200).send({ 
-                email: user.email,
-                _id: user._id,
-                accessToken: newTokens.accessToken,
-                refreshToken: newTokens.refreshToken
-            });
-        } catch (error) {
-            res.status(400).send(error);
-        }
-    });
+
+    try {
+        const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET) as { _id: string };
+        
+        req.user = { _id: payload._id };
+        
+        next();
+    } catch {
+        res.status(403).send({ message: 'Invalid or expired token.' });
+    }
 };
 
-type Payload = {
-    _id: string
-}
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    //  get the authorization header and extract the token from it 
-    const authHeader = req.header('authorization');
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) { 
-        res.status(401).send({ error: 'Access denied' });
-        return;
-    }
-    if(!process.env.ACCESS_TOKEN_SECRET){
-        res.status(400).send({ error: 'Missing auth configuration' });
-        return;
-    }
-
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, payload) => {
-        if (err) {
-            res.status(403).send({ error: 'Invalid token' });
-            return;
-        }
-        req.params.userId = (payload as Payload)._id; // add the user id to the request
-        next();
-    });
-}
-
-const authController = {register, login, authMiddleware, logout, refresh};
+const authController = { register, login, refresh, logout, authMiddleware };
 
 export default authController;
