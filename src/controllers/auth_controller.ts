@@ -1,9 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import UserModel from "../models/users_model"; 
+import UserModel, { iUser } from "../models/users_model"; 
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-
-
 
 const generateTokens = (_id: string): { accessToken: string, refreshToken: string } | null => {
     if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
@@ -14,20 +12,20 @@ const generateTokens = (_id: string): { accessToken: string, refreshToken: strin
     const accessToken = jwt.sign(
         { _id }, 
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: process.env.ACCESS_TOKEN_EXPIRATION || '15m' } // 15 minutes
+        { expiresIn: process.env.ACCESS_TOKEN_EXPIRATION || '15m' }
     );
 
     const refreshToken = jwt.sign(
         { _id },
         process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || '7d' } // 7 days
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || '7d' }
     ); 
 
     return { accessToken, refreshToken };
 }
 
 async function register(req: Request, res: Response) {
-    const { email, password, name } = req.body;
+    const { email, password, name, profilePicture } = req.body;
 
     if (!email || !password || !name) {
         res.status(400).send({ message: 'Name, email, and password are required.' });
@@ -50,7 +48,7 @@ async function register(req: Request, res: Response) {
     }
 
     try {
-        const existingUser = await UserModel.findOne({ email });
+        const existingUser = await UserModel.findOne({ email: email.toLowerCase() });
         if (existingUser) {
             res.status(409).send({ message: 'Email already in use.' });
             return;
@@ -60,9 +58,11 @@ async function register(req: Request, res: Response) {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const newUser = new UserModel({
-            name,
-            email,
+            name: name.trim(),
+            email: email.toLowerCase(),
             password: hashedPassword,
+            profilePicture: profilePicture || undefined, 
+            provider: 'Regular'
         });
         
         await newUser.save();
@@ -84,6 +84,8 @@ async function register(req: Request, res: Response) {
                 _id: newUser._id,
                 name: newUser.name,
                 email: newUser.email,
+                profilePicture: newUser.profilePicture,
+                provider: newUser.provider
             }
         });
 
@@ -100,24 +102,20 @@ async function login(req: Request, res: Response) {
         res.status(400).send({ message: 'Email and password are required.' });
         return;
     }
-      if (password.length < 6) {
-        res.status(400).send({ message: 'Password must be at least 6 characters long.' });
-        return;
-    }
-    
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        res.status(400).send({ message: 'Invalid email format.' });
-        return;
-    }
-    
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(password)) {
-        res.status(400).send({ message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
-        return; 
-    }
 
     try {
-        const user = await UserModel.findOne({ email });
+        const user = await UserModel.findOne({ email: email.toLowerCase() });
         if (!user) {
+            res.status(401).send({ message: 'Invalid credentials.' });
+            return;
+        }
+
+        if (user.provider === 'Google' && !user.password) {
+            res.status(400).send({ message: 'This account was created with Google. Please use Google login.' });
+            return;
+        }
+
+        if (!user.password) {
             res.status(401).send({ message: 'Invalid credentials.' });
             return;
         }
@@ -134,7 +132,19 @@ async function login(req: Request, res: Response) {
             return;
         }
 
-        user.refreshTokens = user.refreshTokens || [];
+        user.refreshTokens = (user.refreshTokens || []).filter(token => {
+        try {
+            jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string);
+            return true;
+        } catch {
+            return false;
+        }
+        });
+
+        if (user.refreshTokens.length >= 5) {
+        user.refreshTokens.shift();
+        }
+
         user.refreshTokens.push(tokens.refreshToken);
         await user.save();
 
@@ -145,6 +155,8 @@ async function login(req: Request, res: Response) {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
+                profilePicture: user.profilePicture,
+                provider: user.provider
             }
         });
 
@@ -186,9 +198,22 @@ const refresh = async (req: Request, res: Response) => {
             return;
         }
 
-        user.refreshTokens = user.refreshTokens.filter(token => token !== refreshToken);
+        user.refreshTokens = (user.refreshTokens || []).filter(token => {
+        try {
+            jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string);
+            return true;
+        } catch {
+            return false;
+        }
+        });
+
+        if (user.refreshTokens.length >= 5) {
+        user.refreshTokens.shift();
+        }
+
         user.refreshTokens.push(newTokens.refreshToken);
         await user.save();
+
 
         res.status(200).send({
             accessToken: newTokens.accessToken,
@@ -200,7 +225,6 @@ const refresh = async (req: Request, res: Response) => {
         res.status(403).send({ message: 'Invalid or expired refresh token. Please log in again.' });
     }
 };
-
 
 const logout = async (req: Request, res: Response) => {
     const { refreshToken } = req.body;
@@ -245,6 +269,28 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     }
 };
 
-const authController = { register, login, refresh, logout, authMiddleware };
+const googleCallback = async (req: Request, res: Response) => {
+    try {
+        const user = req.user as iUser & { _id: string, save: () => Promise<void> };
+
+        const tokens = generateTokens(user._id.toString());
+        if (!tokens) {
+            return res.redirect(`${process.env.CLIENT_URL}/login?error=token-generation-failed`);
+        }
+
+        user.refreshTokens = user.refreshTokens || [];
+        user.refreshTokens.push(tokens.refreshToken);
+        await user.save();
+
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+        res.redirect(`${clientUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`);
+    
+    } catch (error) {
+        console.error("Error in google callback:", error);
+        res.redirect(`${process.env.CLIENT_URL}/login?error=server-error`);
+    }
+};
+
+const authController = { register, login, refresh, logout, authMiddleware, googleCallback };
 
 export default authController;

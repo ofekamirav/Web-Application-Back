@@ -65,8 +65,6 @@ const router = express.Router();
  *           type: string
  *         imageUrl:
  *           type: string
- *         location:
- *           type: string
  *         author:
  *           type: object
  *           properties:

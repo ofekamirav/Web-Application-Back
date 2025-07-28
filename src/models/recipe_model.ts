@@ -7,7 +7,6 @@ export interface iRecipe{
     instructions: string;
     imageUrl: string;
     author: ObjectId;
-    location?: string;
     likes: ObjectId[];
     createdAt: Date;
 }
@@ -37,11 +36,6 @@ const recipeSchema = new mongoose.Schema<iRecipe>({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'UserModel',
         required: true,
-    },
-    location: {
-        type: String,
-        trim: true,
-        required: false,
     },
     likes: [{
         type: mongoose.Schema.Types.ObjectId,

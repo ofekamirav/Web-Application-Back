@@ -2,5 +2,6 @@
 export default {
     preset: 'ts-jest',
     testEnvironment: 'node',
-    roots: ["<rootDir>/src"],
+    setupFilesAfterEnv: ['./src/tests/setup.ts'],
+    testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'], 
 }

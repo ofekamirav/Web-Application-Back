@@ -1,106 +1,136 @@
 import request from 'supertest';
-import initApp from '../server';
-import mongoose from 'mongoose';
-import { Express } from 'express';
-import Comment from '../models/comment_model';
-import User from '../models/users_model';
+import { app } from './setup'; 
+describe('Comments API Endpoints', () => {
+  let userToken: string;
+  let userId: string;
+  let recipeId: string;
 
-let app: Express;
+  beforeAll(async () => {
+    const registerRes = await request(app)
+      .post('/auth/register')
+      .send({
+        name: 'Commenter User',
+        email: 'commenter@example.com',
+        password: 'Password123!',
+      });
+    userId = registerRes.body.user._id;
 
-const testComment = {
-    comment: "Test Comment",
-    postId: "12456123548",
-    owner: "Nitzan",
-};
+    const loginRes = await request(app)
+      .post('/auth/login')
+      .send({
+        email: 'commenter@example.com',
+        password: 'Password123!',
+      });
+    userToken = loginRes.body.accessToken;
 
-type UserTemplate = {
-    email: string,
-    name: string,
-    password: string,
-    id?: string,
-    token?: string
-}
+    const recipeRes = await request(app)
+      .post('/recipes')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        title: 'Recipe for Comments',
+        description: 'A recipe to test comments on.',
+        ingredients: ['ingredient 1'],
+        instructions: 'Test instructions.',
+      });
+    recipeId = recipeRes.body._id;
+  });
 
-const userInfo: UserTemplate = {
-    email: "ofek@gmail.com",
-    name: "Ofek",
-    password: "12345678"
-}
-
-beforeAll(async () => {
-    app = await initApp();
-    console.log('beforeAll');
-    await Comment.deleteMany({});
-    await User.deleteMany({});
-    console.log('Delete all comments and users before testing');
-
-    await request(app).post("/auth/register").send(userInfo);
-    const res = await request(app).post("/auth/login").send(userInfo);
-    userInfo.token = res.body.accessToken;
-    userInfo.id = res.body._id;
-    expect(userInfo.token).toBeDefined();
-});
-
-afterAll(async () => {
-    await mongoose.connection.close();
-    console.log('afterAll');
-});
-
-let commentId = "";
-
-const invalidComment = {
-    content: "Test Content",
-};
-
-describe("Comments test suite", () => {
-    test("Comment test get all comments", async () => {
-        const response = await request(app).get("/comment");
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveLength(0);
+  describe('POST /comments', () => {
+    it('should create a new comment successfully', async () => {
+      const res = await request(app)
+        .post('/comments')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          text: 'This is a great recipe!',
+          recipe: recipeId, 
+        });
+      expect(res.statusCode).toEqual(201);
+      expect(res.body.text).toBe('This is a great recipe!');
+      expect(res.body.author).toBe(userId); // Author should be the logged-in user
+      expect(res.body.recipe).toBe(recipeId);
     });
 
-    test("Test adding a new comment", async () => {
-        const response = await request(app).post("/comment")
-            .set({ authorization: "JWT " + userInfo.token })
-            .send(testComment);
-        expect(response.status).toBe(201);
-        expect(response.body.comment).toBe(testComment.comment);
-        expect(response.body.owner).toBe(testComment.owner);
-        expect(response.body.postId).toBe(testComment.postId);
-        commentId = response.body._id;
+    it('should fail to create a comment without required fields (400 Bad Request)', async () => {
+      const res = await request(app)
+        .post('/comments')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          recipe: recipeId, // Missing 'text'
+        });
+      expect(res.statusCode).toEqual(400);
+    });
+  });
+
+  describe('GET /comments', () => {
+    it('should get all comments for a specific recipe', async () => {
+      // First, ensure a comment exists
+      await request(app)
+        .post('/comments')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ text: 'Another comment', recipe: recipeId });
+
+      const res = await request(app)
+        .get(`/comments?recipe=${recipeId}`); 
+
+      expect(res.statusCode).toEqual(200);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data.length).toBeGreaterThan(0);
+      expect(res.body.data[0].recipe).toBe(recipeId);
     });
 
-    test("Test adding a new comment with invalid data", async () => {
-        const response = await request(app).post("/comment")
-            .set({ authorization: "JWT " + userInfo.token })
-            .send(invalidComment);
-        expect(response.status).toBe(400); // Expecting 400 Bad Request
+    it('should fail if recipe ID is not provided (400 Bad Request)', async () => {
+        const res = await request(app).get('/comments'); // No recipe query parameter
+        expect(res.statusCode).toEqual(400);
+    });
+  });
+
+  describe('PUT /comments/:id & DELETE /comments/:id', () => {
+    let commentId: string;
+    let anotherUserToken: string;
+
+    beforeAll(async () => {
+        await request(app).post('/auth/register').send({ name: 'Other User', email: 'other@example.com', password: 'Password123!' });
+        const loginRes = await request(app).post('/auth/login').send({ email: 'other@example.com', password: 'Password123!' });
+        anotherUserToken = loginRes.body.accessToken;
     });
 
-    test("Test get comment by id", async () => {
-        const response = await request(app).get("/comment/" + commentId);
-        expect(response.status).toBe(200);
-        expect(response.body._id).toBe(commentId);
+    beforeEach(async () => {
+        const res = await request(app)
+            .post('/comments')
+            .set('Authorization', `Bearer ${userToken}`)
+            .send({ text: 'A comment to modify', recipe: recipeId });
+        commentId = res.body._id;
     });
 
-    test("Test get comment by invalid id", async () => {
-        const invalidId = commentId + "1"; 
-        const response = await request(app).get("/comment/" + invalidId);
-        console.log(response.body);
-        expect(response.status).toBe(404); 
+    it('should allow the author to update their own comment', async () => {
+      const res = await request(app)
+        .put(`/comments/${commentId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ text: 'Updated text!' });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.text).toBe('Updated text!');
     });
-    test("Test update comment", async () => {
-        const response = await request(app).put("/comment/" + commentId)
-            .set({ authorization: "JWT " + userInfo.token })
-            .send({ comment: "Updated comment" });
-        expect(response.status).toBe(200);
-        expect(response.body.comment).toBe("Updated comment");
+
+    it('should NOT allow another user to update a comment (403 Forbidden)', async () => {
+        const res = await request(app)
+          .put(`/comments/${commentId}`)
+          .set('Authorization', `Bearer ${anotherUserToken}`) // Using the wrong user's token
+          .send({ text: 'Trying to hack!' });
+        expect(res.statusCode).toEqual(403);
     });
-    test("Test delete comment", async () => {
-        const response = await request(app).delete("/comment/" + commentId)
-            .set({ authorization: "JWT " + userInfo.token });
-        expect(response.status).toBe(200);
-        const response2 = await request(app).get("/comment/" + commentId);
-        expect(response2.status).toBe(404);
+
+    it('should allow the author to delete their own comment', async () => {
+        const res = await request(app)
+          .delete(`/comments/${commentId}`)
+          .set('Authorization', `Bearer ${userToken}`);
+        expect(res.statusCode).toEqual(204);
     });
+
+    it('should NOT allow another user to delete a comment (403 Forbidden)', async () => {
+        const res = await request(app)
+          .delete(`/comments/${commentId}`)
+          .set('Authorization', `Bearer ${anotherUserToken}`); // Using the wrong user's token
+        expect(res.statusCode).toEqual(403);
+    });
+  });
 });
