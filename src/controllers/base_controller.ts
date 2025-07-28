@@ -1,101 +1,136 @@
 import { Request,Response} from 'express';
-import mongoose ,{ Model } from 'mongoose';
+import { Model, PopulateOptions,FilterQuery } from 'mongoose';
 
-class BaseController<T> {
+interface ControllerOptions<T> {
+    populate?: PopulateOptions | (PopulateOptions | string)[];
+    checkAuth?: (doc: T, req: Request) => boolean;
+    preSave?: (data: Partial<T>, req: Request) => Partial<T>;
+}
+
+export class BaseController<T> {
     model: Model<T>;
     constructor(model: Model<T>) { 
         this.model = model;
     }
 
-    async getAll (req:Request, res:Response) {
-        const ownerilter = req.query.owner;
-        try {
-            if(ownerilter){
-                const posts = await this.model.find({owner: ownerilter});
-                res.status(200).json(posts);
-                if(posts==null)
-                    return res.status(404).json({message:'No posts found'});
-                return res.status(200).json(posts);
-            }
-            else{
-                const posts = await this.model.find();
-                return res.status(200).send(posts);
-            }
-        } catch(error){
-            console.log(error);
-            res.status(400).send(error);
-        }
-    };
+  
+    async getAll(req: Request, res: Response, options: ControllerOptions<T> = {}) {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
 
-    async create (req:Request, res:Response) {
-    console.log(req.body);
-    try{
-        const post = await this.model.create(req.body);
-        res.status(201).send(post);
-    } catch(err) {
-        res.status(400);
-        res.send(err);
+        const query = { ...req.query };
+        delete query.page;
+        delete query.limit;
+
+        try {
+            let findQuery = this.model.find(query as FilterQuery<T>)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit);
+
+            if (options.populate) {
+                findQuery = findQuery.populate(options.populate);
+            }
+
+            const items = await findQuery;
+            const totalItems = await this.model.countDocuments(query as FilterQuery<T>);
+
+            res.status(200).json({
+                data: items,
+                totalPages: Math.ceil(totalItems / limit),
+                currentPage: page,
+            });
+        } catch (error) {
+            console.error(`Error in getAll for ${this.model.modelName}:`, error);
+            res.status(500).json({ message: 'Server error.' });
+        }
     }
-    };
+
+
+
+      // Handler to create a new post 
+    async create(req: Request, res: Response, options: ControllerOptions<T> = {}) {
+        let dataToSave: Partial<T> = req.body;
+        
+        if (options.preSave) {
+            dataToSave = options.preSave(dataToSave, req);
+        }
+
+        try {
+            const newItem = new this.model(dataToSave);
+            await newItem.save();
+            
+            if (options.populate) {
+                const populatedItem = await this.model.findById(newItem._id).populate(options.populate);
+                res.status(201).json(populatedItem);
+            } else {
+                res.status(201).json(newItem);
+            }
+        } catch (error) {
+            console.error(`Error in create for ${this.model.modelName}:`, error);
+            res.status(400).json({ message: 'Bad request.', error });
+        }
+    }
 
     //Handler to get a specific post by id
-    async getById (req:Request,res:Response){
-        const id = req.params.id;
-    
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(404).send({ message: 'Invalid ID format' });
-        }
+   async getById(req: Request, res: Response, options: ControllerOptions<T> = {}) {
         try {
-            const post = await this.model.findById(id);
-            console.log(post);
-            if (post == null) {
-                return res.status(404).send({ message: 'Post not found' });
+            let findQuery = this.model.findById(req.params.id);
+
+            if (options.populate) {
+                findQuery = findQuery.populate(options.populate);
             }
-            return res.status(200).json(post);
+
+            const item = await findQuery;
+            if (!item) {
+                return res.status(404).json({ message: `${this.model.modelName} not found.` });
+            }
+            res.status(200).json(item);
         } catch (error) {
-            console.error('Error fetching post:', error);
-            return res.status(500).send({ error: 'Internal server error' });
+            console.error(`Error in getById for ${this.model.modelName}:`, error);
+            res.status(500).json({ message: 'Server error.' });
         }
     }
 
-    async updateById(req: Request, res: Response) {
-        const id = req.params.id;
+    //Handler to update a specific post by id
+       async update(req: Request, res: Response, options: ControllerOptions<T> = {}) {
         try {
-            const updatedPost = await this.model.findByIdAndUpdate(id, req.body, { new: true });
-            if (!updatedPost) {
-                return res.status(404).send({ message: 'Post not found' });
+            const item = await this.model.findById(req.params.id);
+            if (!item) {
+                return res.status(404).json({ message: `${this.model.modelName} not found.` });
             }
-            return res.status(200).send(updatedPost);
+
+            if (options.checkAuth && !options.checkAuth(item, req)) {
+                return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
+            }
+
+            const updatedItem = await this.model.findByIdAndUpdate(req.params.id, req.body, { new: true });
+            res.status(200).json(updatedItem);
         } catch (error) {
-            return res.status(500).send(error);
+            console.error(`Error in update for ${this.model.modelName}:`, error);
+            res.status(500).json({ message: 'Server error.' });
         }
     }
 
-    async deleteById(req: Request, res: Response) {
-        const id = req.params.id;
+     async delete(req: Request, res: Response, options: ControllerOptions<T> = {}) {
         try {
-            const deletedPost = await this.model.findByIdAndDelete(id);
-            if (!deletedPost) {
-                return res.status(404).send({ message: 'Post not found' });
+            const item = await this.model.findById(req.params.id);
+            if (!item) {
+                return res.status(404).json({ message: `${this.model.modelName} not found.` });
             }
-            return res.status(200).send({ message: 'Post deleted successfully' });
-        } catch (error) {
-            return res.status(500).send(error);
-        }
-    }
 
-    async getByOwner (req:Request,res:Response){
-        const owner= req.params.owner;
-        try{
-            const posts=await this.model.find({owner:owner});
-            if(posts==null)
-                return res.status(404).send({message:'No posts found'});
-            return res.status(200).send(posts);
-        } catch(error){
-            return res.status(500).send(error);
+            if (options.checkAuth && !options.checkAuth(item, req)) {
+                return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
+            }
+
+            await this.model.findByIdAndDelete(req.params.id);
+            res.status(204).send();
+        } catch (error) {
+            console.error(`Error in delete for ${this.model.modelName}:`, error);
+            res.status(500).json({ message: 'Server error.' });
         }
     }
 };
-export default BaseController;
 
     

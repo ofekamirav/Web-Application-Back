@@ -1,81 +1,120 @@
-import express from "express";
-const router = express.Router();
-import commentsController from "../controllers/comments_controller"
-import { authMiddleware } from "../controllers/auth_controller";
+import express from 'express';
+import commentController from '../controllers/comments_controller';
+import { authMiddleware } from '../controllers/auth_controller';
 
- /**
- * @swagger
- * tags:
- *  name: Comments
- *  description: The Comments API
- */
+const router = express.Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Comments
+ *   description: API for managing comments on recipes
+ * 
  * components:
  *   schemas:
- *     Comment:
+ *     CommentInput:
  *       type: object
  *       required:
- *         - comment
- *         - postId
- *         - owner
+ *         - text
+ *         - recipe
+ *       properties:
+ *         text:
+ *           type: string
+ *           description: The content of the comment.
+ *         recipe:
+ *           type: string
+ *           description: The ID of the recipe this comment belongs to.
+ *       example:
+ *         text: "This looks delicious! Can't wait to try it."
+ *         recipe: "60d0fe4f5311236168a109ca"
+ * 
+ *     CommentResponse:
+ *       type: object
  *       properties:
  *         _id:
  *           type: string
- *           description: The auto-generated id of the post
- *         comment:
+ *         text:
  *           type: string
- *           description: The title of the post
- *         postId:
+ *         recipe:
  *           type: string
- *           description: The content of the post
- *         owner:
+ *         author:
+ *           type: object
+ *           properties:
+ *             _id:
+ *               type: string
+ *             name:
+ *               type: string
+ *             profilePictureUrl:
+ *               type: string
+ *         createdAt:
  *           type: string
- *           description: The owner id of the post
- *       example:
- *         _id: 245234t234234r234r23g8
- *         comment: My First Comment
- *         postId: 245234t234234r234r23f4
- *         owner: 324vt23r4tr234t245tbv45by
+ *           format: date-time
  */
-
 
 /**
  * @swagger
- * /comment:
+ * /comments:
  *   get:
- *     summary: Get all comments
- *     description: Retrieve a list of all comments
- *     tags:
- *       - Comments
+ *     summary: Get all comments for a specific recipe
+ *     tags: [Comments]
+ *     parameters:
+ *       - in: query
+ *         name: recipe
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the recipe to fetch comments for.
  *     responses:
- *       200:
- *         description: A list of comments
+ *       '200':
+ *         description: A list of comments for the recipe.
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Comment'
- *       500:
- *         description: Server error
+ *                 $ref: '#/components/schemas/CommentResponse'
+ *       '400':
+ *         description: Bad Request (Recipe ID is missing).
  */
-
-router.get("/", (req, res) => {
-    commentsController.getAll.bind(commentsController)(req, res);
-});
+router.get('/', commentController.getCommentsForRecipe);
 
 /**
  * @swagger
- * /comment:
+ * /comments:
  *   post:
  *     summary: Create a new comment
- *     description: Create a new comment
- *     tags:
- *       - Comments
+ *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CommentInput'
+ *     responses:
+ *       '201':
+ *         description: Comment created successfully.
+ *       '401':
+ *         description: Unauthorized.
+ */
+router.post('/', authMiddleware, commentController.createComment);
+
+/**
+ * @swagger
+ * /comments/{id}:
+ *   put:
+ *     summary: Update a comment
+ *     description: Update a comment that you authored.
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -83,133 +122,41 @@ router.get("/", (req, res) => {
  *           schema:
  *             type: object
  *             properties:
- *               comment:
+ *               text:
  *                 type: string
- *                 description: The content of the comment
- *               postId:
- *                 type: string
- *                 description: The post id associated with the comment
- *               owner:
- *                 type: string
- *                 description: The owner id of the comment
- *             required:
- *               - comment
- *               - postId
- *               - owner
  *     responses:
- *       201:
- *         description: Comment created successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Comment'
- *       400:
- *         description: Invalid input
- *       500:
- *         description: Server error
+ *       '200':
+ *         description: Comment updated successfully.
+ *       '403':
+ *         description: Forbidden (not the author).
+ *       '404':
+ *         description: Comment not found.
  */
-router.post("/", authMiddleware, commentsController.create.bind(commentsController));
+router.put('/:id', authMiddleware, commentController.updateComment);
 
 /**
  * @swagger
- * /comment/{id}:
- *   get:
- *     summary: Get a comment by ID
- *     description: Retrieve a comment by its ID
- *     tags:
- *       - Comments
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: The ID of the comment
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: A comment object
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Comment'
- *       404:
- *         description: Comment not found
- *       500:
- *         description: Server error
- */
-
-
-router.get("/:id", (req, res) => {
-    commentsController.getById.bind(commentsController)(req, res);
-});
-
-/**
- * @swagger
- * /comment/{id}:
- *   put:
- *     summary: Update a comment by ID
- *     description: Update a comment by its ID
- *     tags:
- *       - Comments
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: The ID of the comment
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Comment'
- *     responses:
- *       200:
- *         description: Comment updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Comment'
- *       400:
- *         description: Invalid input
- *       500:
- *         description: Server error
- */
-
-
-router.put("/:id", authMiddleware, (req, res) => {
-    commentsController.updateById.bind(commentsController)(req, res);
-});
-
-/**
- * @swagger
- * /comment/{id}:
+ * /comments/{id}:
  *   delete:
- *     summary: Delete a comment by ID
- *     description: Delete a comment by its ID
- *     tags:
- *       - Comments
+ *     summary: Delete a comment
+ *     description: Delete a comment that you authored.
+ *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - name: id
- *         in: path
+ *       - in: path
+ *         name: id
  *         required: true
- *         description: The ID of the comment
  *         schema:
  *           type: string
  *     responses:
- *       200:
- *         description: Comment deleted successfully
- *       500:
- *         description: Server error
+ *       '204':
+ *         description: Comment deleted successfully.
+ *       '403':
+ *         description: Forbidden (not the author).
+ *       '404':
+ *         description: Comment not found.
  */
-
-router.delete("/:id", authMiddleware, (req, res) => {
-    commentsController.deleteById.bind(commentsController)(req, res);
-});
+router.delete('/:id', authMiddleware, commentController.deleteComment);
 
 export default router;
