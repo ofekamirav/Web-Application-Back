@@ -1,6 +1,8 @@
 import express from "express";
 import authController from "../controllers/auth_controller";
 import passport from 'passport';
+import multer from 'multer'; 
+const upload = multer({ dest: 'uploads/' });
 
 
 const router = express.Router();
@@ -124,14 +126,34 @@ const router = express.Router();
  * /auth/register:
  *   post:
  *     summary: Register a new user
- *     description: Create a new user account with email and password
+ *     description: Create a new user account with email, password, and an optional profile picture.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data: # 3. שינוי סוג התוכן ל-multipart/form-data
  *           schema:
- *             $ref: '#/components/schemas/UserRegister'
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: The user's full name.
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The user's email address.
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 description: The user's password.
+ *               profilePicture: # הוספת השדה לקובץ
+ *                 type: string
+ *                 format: binary
+ *                 description: The user's profile picture file (optional).
  *     responses:
  *       '201':
  *         description: User registered successfully
@@ -146,7 +168,7 @@ const router = express.Router();
  *       '500':
  *         description: Server error
  */
-router.post("/register", authController.register);
+router.post("/register", upload.single('profilePicture'), authController.register);
 
 /**
  * @swagger

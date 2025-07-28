@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import UserModel, { iUser } from "../models/users_model"; 
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import cloudinary from '../config/cloudinary';
 
 const generateTokens = (_id: string): { accessToken: string, refreshToken: string } | null => {
     if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
@@ -24,25 +26,30 @@ const generateTokens = (_id: string): { accessToken: string, refreshToken: strin
     return { accessToken, refreshToken };
 }
 
-async function register(req: Request, res: Response) {
-    const { email, password, name, profilePicture } = req.body;
+
+async function register(req: Request, res: Response): Promise<void> {
+    const { email, password, name } = req.body;
 
     if (!email || !password || !name) {
+        if (req.file) fs.unlinkSync(req.file.path); 
         res.status(400).send({ message: 'Name, email, and password are required.' });
         return;
     }
     
     if (password.length < 6) {
+        if (req.file) fs.unlinkSync(req.file.path);
         res.status(400).send({ message: 'Password must be at least 6 characters long.' });
         return;
     }
     
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (req.file) fs.unlinkSync(req.file.path);
         res.status(400).send({ message: 'Invalid email format.' });
         return;
     }
     
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(password)) {
+        if (req.file) fs.unlinkSync(req.file.path);
         res.status(400).send({ message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
         return; 
     }
@@ -50,18 +57,35 @@ async function register(req: Request, res: Response) {
     try {
         const existingUser = await UserModel.findOne({ email: email.toLowerCase() });
         if (existingUser) {
+            if (req.file) fs.unlinkSync(req.file.path); 
             res.status(409).send({ message: 'Email already in use.' });
             return;
         }
 
+        let profilePictureUrl = "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"; // URL ברירת מחדל
+
+        if (req.file) {
+            try {
+                const result = await cloudinary.uploader.upload(req.file.path, {
+                    folder: 'profile_pictures',
+                    resource_type: 'image',
+                });
+                profilePictureUrl = result.secure_url;
+            } catch (uploadError) {
+                console.error("Cloudinary upload failed:", uploadError);
+            } finally {
+                fs.unlinkSync(req.file.path);
+            }
+        }
+        
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-
+        
         const newUser = new UserModel({
             name: name.trim(),
             email: email.toLowerCase(),
             password: hashedPassword,
-            profilePicture: profilePicture || undefined, 
+            profilePicture: profilePictureUrl, 
             provider: 'Regular'
         });
         
@@ -73,7 +97,19 @@ async function register(req: Request, res: Response) {
             return;
         }
 
-        newUser.refreshTokens = newUser.refreshTokens || [];
+        newUser.refreshTokens = (newUser.refreshTokens || []).filter(token => {
+        try {
+            jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string);
+            return true;
+        } catch {
+            return false;
+        }
+        });
+
+        if (newUser.refreshTokens.length >= 5) {
+        newUser.refreshTokens.shift();
+        }
+
         newUser.refreshTokens.push(tokens.refreshToken);
         await newUser.save();
 
@@ -94,6 +130,8 @@ async function register(req: Request, res: Response) {
         res.status(500).send({ message: 'An internal server error occurred.' });
     }
 }
+
+
 
 async function login(req: Request, res: Response) {
     const { email, password } = req.body;
