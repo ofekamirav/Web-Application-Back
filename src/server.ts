@@ -31,7 +31,7 @@ const options ={
             description: 'REST server including authentication using JWT',
         },
         servers:[{url: 'http://localhost:3000',},],
-        components: { // חשוב להוסיף את זה כדי ש-bearerAuth יעבוד
+        components: { 
             securitySchemes: {
                 bearerAuth: {
                     type: 'http',
