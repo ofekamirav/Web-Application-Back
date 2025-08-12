@@ -34,12 +34,12 @@ const recipeSchema = new mongoose.Schema<iRecipe>({
     },
     author: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'UserModel',
+        ref: 'User',
         required: true,
     },
     likes: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'UserModel',
+        ref: 'User',
     }],
     createdAt: {
         type: Date,

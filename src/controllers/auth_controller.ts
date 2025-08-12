@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import cloudinary from '../config/cloudinary';
 
+
 const generateTokens = (_id: string): { accessToken: string, refreshToken: string } | null => {
     if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
         console.error("FATAL ERROR: Token secrets are not defined in .env file.");
@@ -63,21 +64,20 @@ async function register(req: Request, res: Response): Promise<void> {
         }
 
         let profilePictureUrl = "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"; // URL ברירת מחדל
-
         if (req.file) {
             try {
-                const result = await cloudinary.uploader.upload(req.file.path, {
-                    folder: 'profile_pictures',
+                const b64 = Buffer.from(req.file.buffer).toString("base64");
+                const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+                const result = await cloudinary.uploader.upload(dataURI, {
+                    folder: 'recipehub/profile_pictures',
                     resource_type: 'image',
                 });
                 profilePictureUrl = result.secure_url;
             } catch (uploadError) {
                 console.error("Cloudinary upload failed:", uploadError);
-            } finally {
-                fs.unlinkSync(req.file.path);
             }
-        }
-        
+        }   
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         

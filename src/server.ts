@@ -6,7 +6,9 @@ import passport from 'passport';
 import bodyParser from 'body-parser';
 import RecipesRoutes from './routes/recipes_routes'; 
 import CommentsRoute from './routes/comments_routes'; 
+import UserRoutes from './routes/users_routes';
 import AuthRoute from './routes/auth_routes';
+import AiRoute from './routes/ai_routes';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import './config/passport_setup'; 
@@ -18,6 +20,8 @@ app.use(cors()); //Enable frontend access
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); 
 app.use(passport.initialize());
+app.use('/ai', AiRoute);
+app.use('/users', UserRoutes);
 app.use('/recipes', RecipesRoutes);
 app.use('/comments', CommentsRoute);
 app.use('/auth', AuthRoute); 

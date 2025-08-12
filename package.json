@@ -20,6 +20,7 @@
   "author": "Ofek Amirav",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.11.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cloudinary": "^2.7.0",
