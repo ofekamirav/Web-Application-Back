@@ -2,9 +2,9 @@ import express from "express";
 import authController from "../controllers/auth_controller";
 import passport from 'passport';
 import multer from 'multer'; 
-const upload = multer({ dest: 'uploads/' });
 
-
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 const router = express.Router();
 
 /**
@@ -12,10 +12,6 @@ const router = express.Router();
  * tags:
  *   name: Auth
  *   description: The Authentication API
- */
-
-/**
- * @swagger
  * components:
  *   securitySchemes:
  *     bearerAuth:
@@ -128,10 +124,12 @@ const router = express.Router();
  *     summary: Register a new user
  *     description: Create a new user account with email, password, and an optional profile picture.
  *     tags: [Auth]
+ *     consumes:
+ *       - multipart/form-data
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data: # 3. שינוי סוג התוכן ל-multipart/form-data
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -150,7 +148,7 @@ const router = express.Router();
  *                 type: string
  *                 format: password
  *                 description: The user's password.
- *               profilePicture: # הוספת השדה לקובץ
+ *               profilePicture: 
  *                 type: string
  *                 format: binary
  *                 description: The user's profile picture file (optional).
@@ -252,36 +250,35 @@ router.post("/refresh", authController.refresh);
 router.post("/logout", authController.logout);
 
 
+
 /**
  * @swagger
  * /auth/google:
- * get:
- * summary: Initiate Google OAuth login
- * tags: [Auth]
- * description: Redirects the user to Google's authentication page.
- * responses:
- * '302':
- * description: Redirect to Google's consent screen.
+ *   get:
+ *     summary: Initiate Google OAuth login
+ *     tags: [Auth]
+ *     description: Redirects the user to Google's authentication page.
+ *     responses:
+ *       '302':
+ *         description: Redirect to Google's consent screen.
  */
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-
 
 /**
  * @swagger
  * /auth/google/callback:
- * get:
- * summary: Google OAuth callback URL
- * tags: [Auth]
- * description: Google redirects to this URL after user consent. This endpoint handles the user login/registration, generates JWT tokens, and redirects back to the frontend.
- * responses:
- * '302':
- * description: Redirect to the frontend application with tokens in the URL query.
+ *   get:
+ *     summary: Google OAuth callback URL
+ *     tags: [Auth]
+ *     description: Google redirects here after user consent. This endpoint handles login/registration, generates JWT tokens, and redirects back to the frontend.
+ *     responses:
+ *       '302':
+ *         description: Redirect to the frontend application with tokens in the URL query.
  */
 router.get('/google/callback',
     passport.authenticate('google', { session: false, failureRedirect: `${process.env.CLIENT_URL}/login?error=google-auth-failed` }),
-    
     authController.googleCallback
 );
+
 
 export default router;
