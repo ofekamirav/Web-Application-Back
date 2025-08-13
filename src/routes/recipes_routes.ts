@@ -206,6 +206,53 @@ router.put('/:id', authMiddleware, recipeController.updateRecipe);
 
 /**
  * @swagger
+ * /recipes/{id}/image:
+ *   put:
+ *     summary: Update recipe image
+ *     description: Upload and replace the image of a recipe
+ *     tags: [Recipes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Recipe ID (Mongo ObjectId)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - image
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file (max 5MB)
+ *     responses:
+ *       '200':
+ *         description: Recipe image updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RecipeResponse'
+ *       '400':
+ *         description: Validation error or missing image
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden (not the author)
+ *       '404':
+ *         description: Recipe not found
+ */
+router.put('/:id/image', authMiddleware, upload.single('image'), recipeController.updateRecipeImage);
+
+/**
+ * @swagger
  * /recipes/{id}:
  *   delete:
  *     summary: Delete a recipe

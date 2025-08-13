@@ -15,7 +15,7 @@ async function suggestRecipe(req: Request, res: Response): Promise<void> {
         return;
     }
 
-    const prompt = `Based on these ingredients: ${ingredients.join(', ')}. Suggest a recipe. Provide a response in a valid JSON format with three keys: "title" (string), "description" (string, up to 20 words), and "instructions" (string, detailed steps).`;
+    const prompt = `Based on these ingredients: ${ingredients.join(', ')}. Suggest a recipe. Provide a response in a valid JSON format with three keys: "title" (string), "description" (string, up to 20 words), and "instructions" (an array of strings, where each string is a detailed step).`;
 
     try {
         const response = await axios.post(
