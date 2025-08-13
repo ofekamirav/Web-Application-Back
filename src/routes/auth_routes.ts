@@ -262,7 +262,7 @@ router.post("/logout", authController.logout);
  *       '302':
  *         description: Redirect to Google's consent screen.
  */
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], prompt: 'select_account' }));
 
 /**
  * @swagger

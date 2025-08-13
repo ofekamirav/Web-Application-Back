@@ -198,6 +198,43 @@ export class RecipeController extends BaseController<iRecipe> {
       res.status(500).json({ message: 'Server error.' });
     }
   };
+
+  updateRecipeImage = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?._id?.toString();
+        if (!userId) { res.status(401).json({ message: 'User not authenticated.' }); return; }
+
+        const recipe = await this.model.findById(id);
+        if (!recipe) { res.status(404).json({ message: 'Recipe not found.' }); return; }
+        if (recipe.author?.toString() !== userId) {
+            res.status(403).json({ message: 'Forbidden.' }); return;
+        }
+        if (!req.file) {
+            res.status(400).json({ message: 'No image uploaded.' }); return;
+        }
+
+        const b64 = Buffer.from(req.file.buffer).toString('base64');
+        const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+        const upload = await cloudinary.uploader.upload(dataURI, {
+            folder: 'recipehub/recipes',
+            resource_type: 'image',
+        });
+
+        recipe.imageUrl = upload.secure_url;
+        await recipe.save();
+
+        const populated = await recipe
+          .populate({ path: 'author', select: 'name profilePicture' })
+          .then(r => r.toObject());
+
+        res.status(200).json(mapAuthorProfilePicture(populated));
+    } catch (e) {
+        console.error('Error updating recipe image:', e);
+        res.status(500).json({ message: 'Server error while updating image.' });
+    }
+};
+
 }
 
 const recipeController = new RecipeController();

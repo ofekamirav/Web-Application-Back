@@ -1,9 +1,9 @@
-import { Schema, model, Document, ObjectId } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 
 export interface iComment extends Document {
+    author: Types.ObjectId;     
+    recipe: Types.ObjectId;     
     text: string;
-    author: ObjectId; 
-    recipe: ObjectId; 
 }
 
 const commentSchema = new Schema<iComment>({

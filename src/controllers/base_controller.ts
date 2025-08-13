@@ -7,7 +7,8 @@ interface ControllerOptions<T> {
   checkAuth?: (doc: T, req: Request) => boolean;
   preSave?: (data: Partial<T>, req: Request) => Partial<T>;
   mapItems?: (items: any[]) => any[]; 
-  mapItem?: (item: any) => any;       
+  mapItem?: (item: any) => any;  
+  filter?: FilterQuery<T>;     
 }
 
 export class BaseController<T> {
@@ -21,23 +22,25 @@ export class BaseController<T> {
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
 
-    const query = { ...req.query } as any;
-    delete query.page;
-    delete query.limit;
+    const queryFromReq = { ...req.query } as Record<string, unknown>;
+    delete queryFromReq.page;
+    delete queryFromReq.limit;
+
+    const mergedFilter = { ...(queryFromReq as FilterQuery<T>), ...(options.filter || {}) };
 
     try {
-      let findQuery = this.model.find(query as FilterQuery<T>)
+      let findQuery = this.model
+        .find(mergedFilter)
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit)
-        .lean();
+        .limit(limit);
 
       if (options.populate) findQuery = findQuery.populate(options.populate);
 
-      const rawItems = await findQuery.lean(); 
-      const items = options.mapItems ? options.mapItems(rawItems as any[]) : rawItems;
+      const rawItems = await findQuery.lean();
+      const items = options.mapItems ? options.mapItems(rawItems as unknown[]) : rawItems;
 
-      const totalItems = await this.model.countDocuments(query as FilterQuery<T>);
+      const totalItems = await this.model.countDocuments(mergedFilter);
 
       res.status(200).json({
         data: items,
