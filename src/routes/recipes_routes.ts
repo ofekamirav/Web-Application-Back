@@ -30,7 +30,7 @@ const upload = multer({ storage: multer.memoryStorage() });
  *           properties:
  *             _id: { type: string }
  *             name: { type: string }
- *             profilePictureUrl: { type: string, nullable: true }
+ *             profilePicture: { type: string, nullable: true }
  *         likes:
  *           type: array
  *           items: { type: string }

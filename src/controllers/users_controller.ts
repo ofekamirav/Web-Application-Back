@@ -30,6 +30,10 @@ interface CloudinaryUploadResult {
   public_id?: string;
 }
 
+const isReplicaSetError = (err: unknown): boolean => {
+  return typeof err === 'object' && err !== null && 'code' in err && (err as { code?: number }).code === 20;
+};
+
 //public profile + recipes
 const getUserProfile = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -164,44 +168,60 @@ const updateCurrentUserProfile = async (req: AuthReq, res: Response): Promise<vo
   }
 };
 
-//delete account and related data
-const deleteCurrentUser = async (req: AuthReq, res: Response): Promise<void> => {
+export const deleteCurrentUser = async (req: AuthReq, res: Response): Promise<void> => {
   const userId = req.user?._id;
-
   if (!userId) {
     res.status(401).json({ message: 'User not authenticated.' });
     return;
   }
 
-  const session = await mongoose.startSession();
+  let session: mongoose.ClientSession | null = null;
+
+  const deleteAllForUser = async (sess?: mongoose.ClientSession): Promise<void> => {
+    const opts = sess ? { session: sess } : undefined;
+    await CommentModel.deleteMany({ author: userId }, opts);
+    await RecipeModel.deleteMany({ author: userId }, opts);
+    await UserModel.findByIdAndDelete(userId, opts);
+  };
 
   try {
-    session.startTransaction();
+    session = await mongoose.startSession();
+    await session.withTransaction(async () => {
+      const user = await UserModel.findById(userId).session(session!);
+      if (!user) {
+        throw new Error('NOT_FOUND');
+      }
+      await deleteAllForUser(session!);
+    });
 
-    const user = await UserModel.findById(userId).session(session);
-    if (!user) {
-      await session.abortTransaction();
+    res.status(204).send();
+    return;
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NOT_FOUND') {
       res.status(404).json({ message: 'User not found.' });
       return;
     }
 
-    const deletedComments = await CommentModel.deleteMany({ author: userId }, { session });
-    const deletedRecipes = await RecipeModel.deleteMany({ author: userId }, { session });
-    await UserModel.findByIdAndDelete(userId, { session });
+    if (isReplicaSetError(err)) {
+      try {
+        await deleteAllForUser();
+        res.status(204).send();
+        return;
+      } catch (innerErr) {
+        // eslint-disable-next-line no-console
+        console.error('Error during non-transactional account deletion:', innerErr);
+        res.status(500).json({ message: 'Server error during account deletion. Please try again.' });
+        return;
+      }
+    }
 
-    await session.commitTransaction();
-
-    console.log(
-      `User ${userId} deleted. Removed ${deletedRecipes.deletedCount} recipes and ${deletedComments.deletedCount} comments.`
-    );
-
-    res.status(204).send();
-  } catch (error) {
-    await session.abortTransaction();
-    console.error('Error during account deletion:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error during account deletion:', err);
     res.status(500).json({ message: 'Server error during account deletion. Please try again.' });
   } finally {
-    session.endSession();
+    if (session) {
+      void session.endSession();
+    }
   }
 };
 

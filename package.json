@@ -8,7 +8,7 @@
     "dev": "nodemon ./src/app.ts",
     "test": "tsc &&jest --detectOpenHandles --coverage --forceExit",
     "testUser": "tsc && jest --detectOpenHandles --forceExit users.test.ts",
-    "testPost": "tsc && jest --detectOpenHandles --forceExit posts.test.ts",
+    "testRecipe": "tsc && jest --detectOpenHandles --forceExit recipes.test.ts",
     "testComment": "tsc && jest --detectOpenHandles --forceExit comments.test.ts",
     "testAuth": "tsc && jest --detectOpenHandles --forceExit auth.test.ts",
     "lint": "eslint . --ext .ts"
@@ -27,6 +27,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.1",
+    "google-auth-library": "^10.2.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.2",
     "multer": "^2.0.2",

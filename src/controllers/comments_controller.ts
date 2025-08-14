@@ -18,7 +18,18 @@ class CommentController extends BaseController<iComment & Document> {
 
     super.getAll(req, res, {
       filter: { recipe },
-      populate: { path: 'author', select: 'name profilePicture' }, 
+      populate: { path: 'author', select: 'name profilePicture' },
+      mapItem: (doc) => {
+        if (!doc) return doc;
+        if (doc.author && typeof doc.author === 'object') {
+          doc.author = {
+            _id: doc.author._id?.toString?.() ?? doc.author._id,
+            name: doc.author.name,
+            profilePicture: doc.author.profilePicture ?? doc.author.profilePictureUrl ?? null,
+          };
+        }
+        return doc;
+      }
     });
   };
 
