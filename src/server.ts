@@ -3,35 +3,44 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
-import RecipesRoutes from './routes/recipes_routes'; 
-import CommentsRoute from './routes/comments_routes'; 
+import RecipesRoutes from './routes/recipes_routes';
+import CommentsRoute from './routes/comments_routes';
 import UserRoutes from './routes/users_routes';
 import AuthRoute from './routes/auth_routes';
 import AiRoute from './routes/ai_routes';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import process from 'process';
 dotenv.config();
 const app = express();
 
 app.use(cors()); //Enable frontend access
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true })); 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "*");
+    res.header("Access-Control-Allow-Headers", "*");
+    next();
+});
 app.use('/ai', AiRoute);
 app.use('/users', UserRoutes);
 app.use('/recipes', RecipesRoutes);
 app.use('/comments', CommentsRoute);
-app.use('/auth', AuthRoute); 
+app.use('/auth', AuthRoute);
 
-const options ={
-    definition:{
+const options = {
+    definition: {
         openapi: '3.0.0',
-        info:{
+        info: {
             title: 'RecipeHub API',
             version: '1.0.0',
             description: 'REST server including authentication using JWT',
         },
-        servers:[{url: 'http://localhost:3000',},],
-        components: { 
+        servers: [{ url: 'http://localhost:' + process.env.PORT, },
+        { url: 'https://node01.cs.colman.ac.il:', },
+        ],
+        components: {
             securitySchemes: {
                 bearerAuth: {
                     type: 'http',
@@ -48,26 +57,26 @@ const specs = swaggerJsdoc(options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 
-const initApp= async () =>{
-    return new Promise<Express>((resolve,reject)=>{
-    const db = mongoose.connection;
-    db.on("error", (error) => console.error('Connection error:', error));
-    db.once("open", () => {
-        console.log("Connected to MongoDB");
-    });
+const initApp = async () => {
+    return new Promise<Express>((resolve, reject) => {
+        const db = mongoose.connection;
+        db.on("error", (error) => console.error('Connection error:', error));
+        db.once("open", () => {
+            console.log("Connected to MongoDB");
+        });
 
-    if(process.env.DB_CONNECTION==undefined){
-        console.error("DB_CONNECTION is not defined");
-        reject();
+        if (process.env.DB_CONNECTION == undefined) {
+            console.error("DB_CONNECTION is not defined");
+            reject();
 
-    }else{
-    mongoose.connect(process.env.DB_CONNECTION).then(() => {
-        resolve(app);
-    }).catch((error) => {
-        console.error('Error when trying to connect to the database:', error);
-        reject(error);
+        } else {
+            mongoose.connect(process.env.DB_CONNECTION).then(() => {
+                resolve(app);
+            }).catch((error) => {
+                console.error('Error when trying to connect to the database:', error);
+                reject(error);
+            });
+        }
     });
-}
-});
 }
 export default initApp;

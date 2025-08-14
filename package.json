@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsc && node ./dist/src/app.js",
+    "prod": "cp .envprod .env && tsc -p tsconfig.prod.json && node ./dist/src/app.js",
+    "start": "cp .envdev .env && tsc && node ./dist/src/app.js",
     "dev": "nodemon ./src/app.ts",
     "test": "tsc &&jest --detectOpenHandles --coverage --forceExit",
     "testUser": "tsc && jest --detectOpenHandles --forceExit users.test.ts",
