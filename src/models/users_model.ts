@@ -19,17 +19,10 @@ const userSchema = new mongoose.Schema(
             required: true,
             trim: true
         },
-        email: { 
-            type: String, 
-            required: true,
-            unique: true,
-            lowercase: true,
-            trim: true,
-            index: true
-        },
+        email: { type: String, required: true, lowercase: true, trim: true },
         password: { 
             type: String, 
-            required: function(this: iUser) {
+            required: function(this: mongoose.Document & iUser) {
                 return this.provider !== 'Google';
             }
         },
@@ -40,7 +33,7 @@ const userSchema = new mongoose.Schema(
         provider: {
             type: String, 
             enum: ['Regular', 'Google'],
-            default: 'Regular' 
+            default: 'Regular'
         },
         refreshTokens: {
             type: [String],
@@ -53,14 +46,14 @@ const userSchema = new mongoose.Schema(
     }
 ); 
 
-userSchema.index({ email: 1 });
+userSchema.index({ email: 1 }, { unique: true, name: 'email_1' });
 userSchema.index({ provider: 1 });
 
-userSchema.pre('save', function(next) {
-    if (this.isModified('email')) {
-        this.email = this.email.toLowerCase();
-    }
-    next();
+userSchema.pre('save', function (next) {
+  if (this.isModified('email') && typeof this.email === 'string') {
+    this.email = this.email.toLowerCase();
+  }
+  next();
 });
 
 const User = mongoose.model<iUser>('User', userSchema);

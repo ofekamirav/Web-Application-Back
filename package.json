@@ -4,6 +4,7 @@
   "description": "Backend services for RecipeHub web application.",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
     "start": "tsc && node ./dist/src/app.js",
     "dev": "nodemon ./src/app.ts",
     "test": "tsc &&jest --detectOpenHandles --coverage --forceExit",
