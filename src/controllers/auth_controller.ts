@@ -1,31 +1,40 @@
 import { NextFunction, Request, Response } from 'express';
 import UserModel from "../models/users_model"; 
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions, Secret } from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import fs from 'fs';
+import crypto from 'crypto';
 import cloudinary from '../config/cloudinary';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 const generateTokens = (_id: string): { accessToken: string; refreshToken: string } | null => {
-  if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
+    const accessSecret = process.env.ACCESS_TOKEN_SECRET as Secret | undefined;
+    const refreshSecret = process.env.REFRESH_TOKEN_SECRET as Secret | undefined;
+
+  if (!accessSecret || !refreshSecret) {
     console.error("FATAL ERROR: Token secrets are not defined in .env file.");
     return null;
   }
 
+    const accessExp: SignOptions['expiresIn'] =
+    (process.env.ACCESS_TOKEN_EXPIRATION ?? '15m') as unknown as SignOptions['expiresIn'];
+    const refreshExp: SignOptions['expiresIn'] =
+    (process.env.REFRESH_TOKEN_EXPIRATION ?? '7d') as unknown as SignOptions['expiresIn']
+
   const accessToken = jwt.sign(
     { _id },
-    process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRATION || '15m' }
+    accessSecret,
+    { expiresIn: accessExp }
   );
 
   const refreshToken = jwt.sign(
     { _id },
-    process.env.REFRESH_TOKEN_SECRET,
+    refreshSecret,
     {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || '7d',
+      expiresIn: refreshExp,
       jwtid: crypto.randomUUID(),
     }
   );

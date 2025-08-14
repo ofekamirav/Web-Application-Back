@@ -10,8 +10,6 @@ import AuthRoute from './routes/auth_routes';
 import AiRoute from './routes/ai_routes';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import './config/passport_setup'; 
-
 dotenv.config();
 const app = express();
 

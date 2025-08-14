@@ -208,14 +208,12 @@ export const deleteCurrentUser = async (req: AuthReq, res: Response): Promise<vo
         res.status(204).send();
         return;
       } catch (innerErr) {
-        // eslint-disable-next-line no-console
         console.error('Error during non-transactional account deletion:', innerErr);
         res.status(500).json({ message: 'Server error during account deletion. Please try again.' });
         return;
       }
     }
 
-    // eslint-disable-next-line no-console
     console.error('Error during account deletion:', err);
     res.status(500).json({ message: 'Server error during account deletion. Please try again.' });
   } finally {
