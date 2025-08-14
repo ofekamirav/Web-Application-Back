@@ -44,7 +44,7 @@ const router = express.Router();
  *               type: string
  *             name:
  *               type: string
- *             profilePictureUrl:
+ *             profilePicture:
  *               type: string
  *         createdAt:
  *           type: string

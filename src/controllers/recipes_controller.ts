@@ -12,7 +12,7 @@ function mapAuthorProfilePicture(doc: any) {
     doc.author = {
       _id: a._id?.toString?.() ?? a._id,
       name: a.name,
-      profilePictureUrl: a.profilePicture ?? null,
+      profilePicture: a.profilePicture ?? a.profilePictureUrl ?? null,
     };
   }
   return doc;
@@ -137,6 +137,8 @@ export class RecipeController extends BaseController<iRecipe> {
   updateRecipe = (req: Request, res: Response): void => {
     super.update(req, res, {
       checkAuth: (doc: any, req) => doc.author?.toString() === req.user?._id,
+      populate: { path: 'author', select: 'name profilePicture' },
+      mapItem: (it) => mapAuthorProfilePicture(it),
     });
   };
 

@@ -1,31 +1,37 @@
 import { NextFunction, Request, Response } from 'express';
-import UserModel, { iUser } from "../models/users_model"; 
+import UserModel from "../models/users_model"; 
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 import fs from 'fs';
 import cloudinary from '../config/cloudinary';
 
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-const generateTokens = (_id: string): { accessToken: string, refreshToken: string } | null => {
-    if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
-        console.error("FATAL ERROR: Token secrets are not defined in .env file.");
-        return null;
+
+const generateTokens = (_id: string): { accessToken: string; refreshToken: string } | null => {
+  if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
+    console.error("FATAL ERROR: Token secrets are not defined in .env file.");
+    return null;
+  }
+
+  const accessToken = jwt.sign(
+    { _id },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRATION || '15m' }
+  );
+
+  const refreshToken = jwt.sign(
+    { _id },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || '7d',
+      jwtid: crypto.randomUUID(),
     }
+  );
 
-    const accessToken = jwt.sign(
-        { _id }, 
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: process.env.ACCESS_TOKEN_EXPIRATION || '15m' }
-    );
-
-    const refreshToken = jwt.sign(
-        { _id },
-        process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || '7d' }
-    ); 
-
-    return { accessToken, refreshToken };
-}
+  return { accessToken, refreshToken };
+};
 
 
 async function register(req: Request, res: Response): Promise<void> {
@@ -232,26 +238,13 @@ const refresh = async (req: Request, res: Response) => {
 
         const newTokens = generateTokens(userId);
         if (!newTokens) {
-            res.status(500).send({ message: 'Could not generate tokens due to server configuration error.' });
+            res.status(500).send({ message: 'Could not generate tokens.' });
             return;
         }
 
-        user.refreshTokens = (user.refreshTokens || []).filter(token => {
-        try {
-            jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string);
-            return true;
-        } catch {
-            return false;
-        }
-        });
-
-        if (user.refreshTokens.length >= 5) {
-        user.refreshTokens.shift();
-        }
-
+        user.refreshTokens = user.refreshTokens.filter(token => token !== refreshToken);
         user.refreshTokens.push(newTokens.refreshToken);
         await user.save();
-
 
         res.status(200).send({
             accessToken: newTokens.accessToken,
@@ -307,28 +300,78 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     }
 };
 
-const googleCallback = async (req: Request, res: Response) => {
-    try {
-        const user = req.user as iUser & { _id: string, save: () => Promise<void> };
-
-        const tokens = generateTokens(user._id.toString());
-        if (!tokens) {
-            return res.redirect(`${process.env.CLIENT_URL}/login?error=token-generation-failed`);
-        }
-
-        user.refreshTokens = user.refreshTokens || [];
-        user.refreshTokens.push(tokens.refreshToken);
-        await user.save();
-
-        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';;
-        res.redirect(`${clientUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`);
-    
-    } catch (error) {
-        console.error("Error in google callback:", error);
-        res.redirect(`${process.env.CLIENT_URL}/login?error=server-error`);
+const googleSignin = async (req: Request, res: Response) => {
+  try {
+    const { credential } = req.body as { credential?: string };
+    if (!credential) {
+      res.status(400).send({ message: 'Missing Google credential.' });
+      return;
     }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const email = payload?.email?.toLowerCase();
+    if (!email) {
+      res.status(400).send({ message: 'Google token missing email.' });
+      return;
+    }
+
+    let user = await UserModel.findOne({ email });
+
+    if (user) {
+      if (user.provider === 'Regular') {
+        res.status(400).send({
+          message: 'This email is already registered with password. Please log in with your password.'
+        });
+        return;
+      }
+      if (!user.profilePicture && payload?.picture) {
+        user.profilePicture = payload.picture;
+        await user.save();
+      }
+    } else {
+      user = await UserModel.create({
+        name: payload?.name || email.split('@')[0],
+        email,
+        provider: 'Google',
+        profilePicture: payload?.picture,
+      });
+    }
+
+    const tokens = generateTokens(user._id.toString());
+    if (!tokens) {
+      res.status(500).send({ message: 'Could not generate tokens.' });
+      return;
+    }
+
+    user.refreshTokens = (user.refreshTokens || []).filter(token => {
+      try { jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string); return true; }
+      catch { return false; }
+    });
+    if (user.refreshTokens.length >= 5) user.refreshTokens.shift();
+    user.refreshTokens.push(tokens.refreshToken);
+    await user.save();
+
+    res.status(200).send({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        profilePicture: user.profilePicture,
+        provider: user.provider,
+      },
+    });
+  } catch (err) {
+    console.error('googleSignin error:', err);
+    res.status(401).send({ message: 'Invalid Google credential.' });
+  }
 };
 
-const authController = { register, login, refresh, logout, authMiddleware, googleCallback };
+const authController = { register, login, refresh, logout, authMiddleware, googleSignin };
 
 export default authController;

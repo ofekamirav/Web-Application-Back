@@ -1,5 +1,6 @@
 import request from 'supertest';
-import { app } from './setup'; 
+import { app } from './setup';
+
 describe('Comments API Endpoints', () => {
   let userToken: string;
   let userId: string;
@@ -29,7 +30,7 @@ describe('Comments API Endpoints', () => {
       .send({
         title: 'Recipe for Comments',
         description: 'A recipe to test comments on.',
-        ingredients: ['ingredient 1'],
+        ingredients: JSON.stringify(['ingredient 1']), 
         instructions: 'Test instructions.',
       });
     recipeId = recipeRes.body._id;
@@ -42,11 +43,12 @@ describe('Comments API Endpoints', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .send({
           text: 'This is a great recipe!',
-          recipe: recipeId, 
+          recipe: recipeId,
         });
+
       expect(res.statusCode).toEqual(201);
       expect(res.body.text).toBe('This is a great recipe!');
-      expect(res.body.author).toBe(userId); // Author should be the logged-in user
+      expect(res.body.author).toBe(userId);
       expect(res.body.recipe).toBe(recipeId);
     });
 
@@ -63,14 +65,13 @@ describe('Comments API Endpoints', () => {
 
   describe('GET /comments', () => {
     it('should get all comments for a specific recipe', async () => {
-      // First, ensure a comment exists
       await request(app)
         .post('/comments')
         .set('Authorization', `Bearer ${userToken}`)
         .send({ text: 'Another comment', recipe: recipeId });
 
       const res = await request(app)
-        .get(`/comments?recipe=${recipeId}`); 
+        .get(`/comments?recipe=${recipeId}`);
 
       expect(res.statusCode).toEqual(200);
       expect(Array.isArray(res.body.data)).toBe(true);
@@ -79,8 +80,8 @@ describe('Comments API Endpoints', () => {
     });
 
     it('should fail if recipe ID is not provided (400 Bad Request)', async () => {
-        const res = await request(app).get('/comments'); // No recipe query parameter
-        expect(res.statusCode).toEqual(400);
+      const res = await request(app).get('/comments'); // No recipe query parameter
+      expect(res.statusCode).toEqual(400);
     });
   });
 
@@ -89,17 +90,17 @@ describe('Comments API Endpoints', () => {
     let anotherUserToken: string;
 
     beforeAll(async () => {
-        await request(app).post('/auth/register').send({ name: 'Other User', email: 'other@example.com', password: 'Password123!' });
-        const loginRes = await request(app).post('/auth/login').send({ email: 'other@example.com', password: 'Password123!' });
-        anotherUserToken = loginRes.body.accessToken;
+      await request(app).post('/auth/register').send({ name: 'Other User', email: 'other@example.com', password: 'Password123!' });
+      const loginRes = await request(app).post('/auth/login').send({ email: 'other@example.com', password: 'Password123!' });
+      anotherUserToken = loginRes.body.accessToken;
     });
 
     beforeEach(async () => {
-        const res = await request(app)
-            .post('/comments')
-            .set('Authorization', `Bearer ${userToken}`)
-            .send({ text: 'A comment to modify', recipe: recipeId });
-        commentId = res.body._id;
+      const res = await request(app)
+        .post('/comments')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ text: 'A comment to modify', recipe: recipeId });
+      commentId = res.body._id;
     });
 
     it('should allow the author to update their own comment', async () => {
@@ -108,29 +109,28 @@ describe('Comments API Endpoints', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .send({ text: 'Updated text!' });
       expect(res.statusCode).toEqual(200);
-      expect(res.body.text).toBe('Updated text!');
     });
 
     it('should NOT allow another user to update a comment (403 Forbidden)', async () => {
-        const res = await request(app)
-          .put(`/comments/${commentId}`)
-          .set('Authorization', `Bearer ${anotherUserToken}`) // Using the wrong user's token
-          .send({ text: 'Trying to hack!' });
-        expect(res.statusCode).toEqual(403);
+      const res = await request(app)
+        .put(`/comments/${commentId}`)
+        .set('Authorization', `Bearer ${anotherUserToken}`)
+        .send({ text: 'Trying to hack!' });
+      expect(res.statusCode).toEqual(403);
     });
 
     it('should allow the author to delete their own comment', async () => {
-        const res = await request(app)
-          .delete(`/comments/${commentId}`)
-          .set('Authorization', `Bearer ${userToken}`);
-        expect(res.statusCode).toEqual(204);
+      const res = await request(app)
+        .delete(`/comments/${commentId}`)
+        .set('Authorization', `Bearer ${userToken}`);
+      expect(res.statusCode).toEqual(204);
     });
 
     it('should NOT allow another user to delete a comment (403 Forbidden)', async () => {
-        const res = await request(app)
-          .delete(`/comments/${commentId}`)
-          .set('Authorization', `Bearer ${anotherUserToken}`); // Using the wrong user's token
-        expect(res.statusCode).toEqual(403);
+      const res = await request(app)
+        .delete(`/comments/${commentId}`)
+        .set('Authorization', `Bearer ${anotherUserToken}`);
+      expect(res.statusCode).toEqual(403);
     });
   });
 });

@@ -2,7 +2,6 @@ import express, { Express } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
-import passport from 'passport';
 import bodyParser from 'body-parser';
 import RecipesRoutes from './routes/recipes_routes'; 
 import CommentsRoute from './routes/comments_routes'; 
@@ -19,7 +18,6 @@ const app = express();
 app.use(cors()); //Enable frontend access
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); 
-app.use(passport.initialize());
 app.use('/ai', AiRoute);
 app.use('/users', UserRoutes);
 app.use('/recipes', RecipesRoutes);
