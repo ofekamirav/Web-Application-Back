@@ -7,3 +7,5 @@ coverage/
 client-cert.pem
 client-key.pem
 client.csr
+storage/*
+!storage/.gitkeep

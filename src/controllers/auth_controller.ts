@@ -5,7 +5,6 @@ import jwt, { SignOptions, Secret } from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import fs from 'fs';
 import crypto from 'crypto';
-import cloudinary from '../config/cloudinary';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -44,7 +43,7 @@ const generateTokens = (_id: string): { accessToken: string; refreshToken: strin
 
 
 async function register(req: Request, res: Response): Promise<void> {
-    const { email, password, name } = req.body;
+    const { email, password, name, profilePicture } = req.body;
 
     if (!email || !password || !name) {
         if (req.file) fs.unlinkSync(req.file.path); 
@@ -78,21 +77,6 @@ async function register(req: Request, res: Response): Promise<void> {
             return;
         }
 
-        let profilePictureUrl = "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"; // URL ברירת מחדל
-        if (req.file) {
-            try {
-                const b64 = Buffer.from(req.file.buffer).toString("base64");
-                const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-
-                const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: 'recipehub/profile_pictures',
-                    resource_type: 'image',
-                });
-                profilePictureUrl = result.secure_url;
-            } catch (uploadError) {
-                console.error("Cloudinary upload failed:", uploadError);
-            }
-        }   
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         
@@ -100,7 +84,7 @@ async function register(req: Request, res: Response): Promise<void> {
             name: name.trim(),
             email: email.toLowerCase(),
             password: hashedPassword,
-            profilePicture: profilePictureUrl, 
+            profilePicture: typeof profilePicture === 'string' && profilePicture.trim() ? profilePicture.trim() : null,
             provider: 'Regular'
         });
         

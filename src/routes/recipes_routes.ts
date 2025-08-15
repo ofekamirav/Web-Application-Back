@@ -1,10 +1,8 @@
 import express from 'express';
 import recipeController from '../controllers/recipes_controller';
 import { authMiddleware } from '../controllers/auth_controller';
-import multer from 'multer';
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
 
 /**
  * @swagger
@@ -136,17 +134,15 @@ router.get('/liked', authMiddleware, recipeController.getLikedRecipes);
  * /recipes:
  *   post:
  *     summary: Create a new recipe
- *     consumes:
- *       - multipart/form-data
- *     description: Multipart form with optional image upload
+ *     description: Send JSON with optional imageUrl obtained from /file
  *     tags: [Recipes]
  *     security: [{ bearerAuth: [] }]
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/RecipeCreateForm'
+ *             $ref: '#/components/schemas/RecipeCreateRequest'
  *     responses:
  *       '201':
  *         description: Recipe created successfully
@@ -155,7 +151,7 @@ router.get('/liked', authMiddleware, recipeController.getLikedRecipes);
  *             schema: { $ref: '#/components/schemas/RecipeResponse' }
  *       '401': { description: Unauthorized }
  */
-router.post('/', authMiddleware, upload.single('image'), recipeController.createRecipe);
+router.post('/', authMiddleware, recipeController.createRecipe);
 
 /**
  * @swagger
@@ -209,7 +205,7 @@ router.put('/:id', authMiddleware, recipeController.updateRecipe);
  * /recipes/{id}/image:
  *   put:
  *     summary: Update recipe image
- *     description: Upload and replace the image of a recipe
+ *     description: Replace the recipe image with a URL (upload to /file first)
  *     tags: [Recipes]
  *     security:
  *       - bearerAuth: []
@@ -223,16 +219,15 @@ router.put('/:id', authMiddleware, recipeController.updateRecipe);
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             required:
- *               - image
+ *               - imageUrl
  *             properties:
- *               image:
+ *               imageUrl:
  *                 type: string
- *                 format: binary
- *                 description: Image file (max 5MB)
+ *                 description: URL under /storage/recipes/...
  *     responses:
  *       '200':
  *         description: Recipe image updated successfully
@@ -241,7 +236,7 @@ router.put('/:id', authMiddleware, recipeController.updateRecipe);
  *             schema:
  *               $ref: '#/components/schemas/RecipeResponse'
  *       '400':
- *         description: Validation error or missing image
+ *         description: Validation error or missing imageUrl
  *       '401':
  *         description: Unauthorized
  *       '403':
@@ -249,7 +244,8 @@ router.put('/:id', authMiddleware, recipeController.updateRecipe);
  *       '404':
  *         description: Recipe not found
  */
-router.put('/:id/image', authMiddleware, upload.single('image'), recipeController.updateRecipeImage);
+router.put('/:id/image', authMiddleware, recipeController.updateRecipeImage);
+
 
 /**
  * @swagger

@@ -1,10 +1,8 @@
 import express from 'express';
-import multer from 'multer';
 import userController from '../controllers/users_controller';
 import { authMiddleware } from '../controllers/auth_controller';
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
 
 /**
  * @swagger
@@ -34,14 +32,14 @@ router.get('/me', authMiddleware, userController.getCurrentUserProfile);
  * /users/me:
  *   put:
  *     summary: Update current user's profile
- *     description: Update name and/or profile picture
+ *     description: Update name and/or profile picture (URL)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
  *       required: false
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
@@ -50,8 +48,7 @@ router.get('/me', authMiddleware, userController.getCurrentUserProfile);
  *                 description: New display name (min 2 chars)
  *               profilePicture:
  *                 type: string
- *                 format: binary
- *                 description: Image file (max 5MB)
+ *                 description: URL under /storage/profile_pictures/... (from /file)
  *     responses:
  *       '200':
  *         description: Profile updated successfully
@@ -62,7 +59,7 @@ router.get('/me', authMiddleware, userController.getCurrentUserProfile);
  *       '500':
  *         description: Server error
  */
-router.put('/me', authMiddleware, upload.single('profilePicture'), userController.updateCurrentUserProfile);
+router.put('/me', authMiddleware, userController.updateCurrentUserProfile);
 
 /**
  * @swagger

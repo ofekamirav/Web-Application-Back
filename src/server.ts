@@ -13,6 +13,7 @@ import swaggerUi from 'swagger-ui-express';
 import process from 'process';
 import path from 'path';
 import fs from 'fs';
+import fileRoute from './routes/file_route';
 
 dotenv.config();
 const app = express();
@@ -42,6 +43,9 @@ app.use('/users', UserRoutes);
 app.use('/recipes', RecipesRoutes);
 app.use('/comments', CommentsRoute);
 app.use('/auth', AuthRoute);
+app.use("/storage", express.static(process.env.STORAGE_DIR || "storage"));
+app.use("/file", fileRoute);
+
 
 const options = {
     definition: {
@@ -99,37 +103,6 @@ app.get('*', (req, res, next) => {
         return res.status(404).send('Frontend not deployed');
     }
     res.sendFile(path.join(clientDir, 'index.html'));
-});
-
-const clientDir = process.env.FRONT_DIR || path.join(__dirname, '..', '..', 'front');
-
-if (!fs.existsSync(clientDir)) {
-  console.warn('[frontend] Static directory not found:', clientDir);
-} else {
-  console.log('[frontend] Serving static from:', clientDir);
-  app.use(
-    express.static(clientDir, {
-      index: 'index.html',
-      maxAge: '1d',
-    })
-  );
-}
-
-app.get('*', (req, res, next) => {
-  if (
-    req.path.startsWith('/auth') ||
-    req.path.startsWith('/recipes') ||
-    req.path.startsWith('/comments') ||
-    req.path.startsWith('/users') ||
-    req.path.startsWith('/ai') ||
-    req.path.startsWith('/api-docs')
-  ) {
-    return next();
-  }
-  if (!fs.existsSync(path.join(clientDir, 'index.html'))) {
-    return res.status(404).send('Frontend not deployed');
-  }
-  res.sendFile(path.join(clientDir, 'index.html'));
 });
 
 

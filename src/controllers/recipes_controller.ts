@@ -3,7 +3,6 @@ import { Request, Response } from 'express';
 import RecipeModel, { iRecipe } from '../models/recipe_model';
 import { BaseController } from './base_controller';
 import { Types } from 'mongoose';
-import cloudinary from '../config/cloudinary';
 
 function mapAuthorProfilePicture(doc: any) {
   if (!doc) return doc;
@@ -69,70 +68,44 @@ export class RecipeController extends BaseController<iRecipe> {
   };
 
    createRecipe = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const { title, description, instructions, ingredients } = req.body;
-            let imageUrl = 'https://placehold.co/600x400/a7f3d0/333?text=Recipe'; 
-            
-             console.log('createRecipe fields:', {
-              hasFile: !!req.file,
-              mimetype: req.file?.mimetype,
-              size: req.file?.size,
-              title, description, instructions,
-            });
+    try {
+      const { title, description, instructions, ingredients, imageUrl } = req.body;
 
-            try {
-              if (req.file) {
-                const b64 = Buffer.from(req.file.buffer).toString("base64");
-                const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-                const result = await cloudinary.uploader.upload(dataURI, {
-                  folder: 'recipehub/recipes',
-                  resource_type: 'image',
-                });
-                imageUrl = result.secure_url;
-                console.log('[recipes] cloudinary ok ->', imageUrl);
-              }
+      let ingredientsArr: string[] = [];
+      try {
+        ingredientsArr = typeof ingredients === 'string' ? JSON.parse(ingredients) : ingredients;
+        if (!Array.isArray(ingredientsArr)) throw new Error();
+      } catch {
+        res.status(400).json({ message: 'Invalid ingredients format.' });
+        return;
+      }
 
-            } catch (e) {
-              console.error('[recipes] cloudinary error:', e);
-              res.status(500).json({ message: 'Cloudinary upload failed.' });
-              return;
-            }
+      const userId = req.user?._id?.toString();
+      if (!userId) { res.status(401).json({ message: 'User not authenticated.' }); return; }
 
-            let ingredientsArr: string[] = [];
-            try {
-                ingredientsArr = JSON.parse(ingredients);
-                if (!Array.isArray(ingredientsArr)) throw new Error();
-            } catch {
-                res.status(400).json({ message: 'Invalid ingredients format.' });
-                return;
-            }
-             const userId = req.user?._id?.toString();
-            if (!userId) {
-                res.status(401).json({ message: 'User not authenticated.' });
-                return;
-            }
+      const recipeData = {
+        title,
+        description,
+        instructions,
+        imageUrl: (typeof imageUrl === 'string' && imageUrl.trim())
+            ? imageUrl.trim()
+            : 'https://placehold.co/600x400/a7f3d0/333?text=Recipe',
+        ingredients: ingredientsArr,
+        author: new Types.ObjectId(userId),
+      };
 
-            const recipeData = {
-                title,
-                description,
-                instructions,
-                imageUrl,
-                ingredients: ingredientsArr,
-                author: new Types.ObjectId(userId),
-            };
+      const newRecipe = new this.model(recipeData);
+      await newRecipe.save();
 
-            const newRecipe = new this.model(recipeData);
-            await newRecipe.save();
-            
-            const populatedRecipe = await this.model.findById(newRecipe._id)
-                .populate({ path: 'author', select: 'name profilePicture' });
+      const populatedRecipe = await this.model.findById(newRecipe._id)
+        .populate({ path: 'author', select: 'name profilePicture' });
 
-            res.status(201).json(populatedRecipe);
-        } catch (error) {
-            console.error('Error creating recipe:', error);
-            res.status(500).json({ message: 'Server error while creating recipe.' });
-        }
-    };
+      res.status(201).json(populatedRecipe);
+    } catch (error) {
+      console.error('Error creating recipe:', error);
+      res.status(500).json({ message: 'Server error while creating recipe.' });
+    }
+  };
 
   updateRecipe = (req: Request, res: Response): void => {
     super.update(req, res, {
@@ -203,39 +176,34 @@ export class RecipeController extends BaseController<iRecipe> {
 
   updateRecipeImage = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { id } = req.params;
-        const userId = req.user?._id?.toString();
-        if (!userId) { res.status(401).json({ message: 'User not authenticated.' }); return; }
+      const { id } = req.params;
+      const userId = req.user?._id?.toString();
+      if (!userId) { res.status(401).json({ message: 'User not authenticated.' }); return; }
 
-        const recipe = await this.model.findById(id);
-        if (!recipe) { res.status(404).json({ message: 'Recipe not found.' }); return; }
-        if (recipe.author?.toString() !== userId) {
-            res.status(403).json({ message: 'Forbidden.' }); return;
-        }
-        if (!req.file) {
-            res.status(400).json({ message: 'No image uploaded.' }); return;
-        }
+      const recipe = await this.model.findById(id);
+      if (!recipe) { res.status(404).json({ message: 'Recipe not found.' }); return; }
+      if (recipe.author?.toString() !== userId) { res.status(403).json({ message: 'Forbidden.' }); return; }
 
-        const b64 = Buffer.from(req.file.buffer).toString('base64');
-        const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-        const upload = await cloudinary.uploader.upload(dataURI, {
-            folder: 'recipehub/recipes',
-            resource_type: 'image',
-        });
+      const { imageUrl } = req.body;
+      if (!(typeof imageUrl === 'string' && imageUrl.trim())) {
+        res.status(400).json({ message: 'imageUrl is required.' });
+        return;
+      }
 
-        recipe.imageUrl = upload.secure_url;
-        await recipe.save();
+      recipe.imageUrl = imageUrl.trim();
+      await recipe.save();
 
-        const populated = await recipe
-          .populate({ path: 'author', select: 'name profilePicture' })
-          .then(r => r.toObject());
+      const populated = await recipe
+        .populate({ path: 'author', select: 'name profilePicture' })
+        .then(r => r.toObject());
 
-        res.status(200).json(mapAuthorProfilePicture(populated));
+      res.status(200).json(populated);
     } catch (e) {
-        console.error('Error updating recipe image:', e);
-        res.status(500).json({ message: 'Server error while updating image.' });
+      console.error('Error updating recipe image:', e);
+      res.status(500).json({ message: 'Server error while updating image.' });
     }
-};
+  };
+
 
 }
 
