@@ -1,4 +1,4 @@
-import express, { Express } from 'express';
+import express, { Express, type RequestHandler } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
@@ -88,22 +88,30 @@ if (!fs.existsSync(clientDir)) {
     );
 }
 
-app.get('*', (req, res, next) => {
-    if (
-        req.path.startsWith('/auth') ||
-        req.path.startsWith('/recipes') ||
-        req.path.startsWith('/comments') ||
-        req.path.startsWith('/users') ||
-        req.path.startsWith('/ai') ||
-        req.path.startsWith('/api-docs')
-    ) {
-        return next();
-    }
-    if (!fs.existsSync(path.join(clientDir, 'index.html'))) {
-        return res.status(404).send('Frontend not deployed');
-    }
-    res.sendFile(path.join(clientDir, 'index.html'));
-});
+const spaFallback: RequestHandler = (req, res, next) => {
+  if (
+    req.path.startsWith('/auth') ||
+    req.path.startsWith('/recipes') ||
+    req.path.startsWith('/comments') ||
+    req.path.startsWith('/users') ||
+    req.path.startsWith('/ai') ||
+    req.path.startsWith('/api-docs') ||
+    req.path.startsWith('/file') ||
+    req.path.startsWith('/storage') ||
+    req.path.startsWith('/env.js')
+  ) {
+    next();
+    return;
+  }
+  const indexPath = path.join(clientDir, 'index.html');
+  if (!fs.existsSync(indexPath)) {
+    res.status(404).send('Frontend not deployed');
+    return;
+  }
+  res.sendFile(indexPath);
+};
+
+app.get('*', spaFallback);
 
 
 const initApp = async () => {
