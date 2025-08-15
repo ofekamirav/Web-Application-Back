@@ -92,7 +92,7 @@ const getCurrentUserProfile = async (req: AuthReq, res: Response): Promise<void>
   }
 };
 
-//update name and/or profile picture
+//update name / email / profile picture
 const updateCurrentUserProfile = async (req: AuthReq, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
@@ -102,14 +102,41 @@ const updateCurrentUserProfile = async (req: AuthReq, res: Response): Promise<vo
     if (!user) { res.status(404).json({ message: 'User not found.' }); return; }
 
     const name = typeof req.body?.name === 'string' ? req.body.name.trim() : undefined;
+    const emailRaw = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : undefined;
     const profilePicture = typeof req.body?.profilePicture === 'string' ? req.body.profilePicture.trim() : undefined;
 
+    // name
     if (name !== undefined) {
       if (name.length < 2) { res.status(400).json({ message: 'Name must be at least 2 characters long.' }); return; }
       user.name = name;
     }
+
+    // email (Regular only)
+    if (emailRaw !== undefined) {
+      if (user.provider && user.provider !== 'Regular') {
+        res.status(400).json({ message: 'Email cannot be changed for Google accounts.' });
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailRaw)) {
+        res.status(400).json({ message: 'Invalid email format.' });
+        return;
+      }
+      if (emailRaw !== user.email) {
+        const taken = await UserModel.exists({ email: emailRaw, _id: { $ne: user._id } });
+        if (taken) {
+          res.status(409).json({ message: 'Email is already in use.' });
+          return;
+        }
+        user.email = emailRaw;
+
+        // user.refreshTokens = [];
+      }
+    }
+
+    // profile picture
     if (profilePicture !== undefined) {
-      user.profilePicture = profilePicture || null; 
+      user.profilePicture = profilePicture || null;
     }
 
     const updatedUser = await user.save();
