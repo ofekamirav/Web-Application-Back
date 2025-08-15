@@ -1,9 +1,6 @@
 import express from "express";
 import authController from "../controllers/auth_controller";
-import multer from "multer";
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
 const router = express.Router();
 
 /**
@@ -30,13 +27,12 @@ const router = express.Router();
  *           description: The user password (must contain uppercase, lowercase, number, and special character)
  *         profilePicture:
  *           type: string
- *           description: URL to user profile picture (optional)
+ *           description: URL to user profile picture (optional, from /file)
  *       example:
  *         name: 'John Doe'
  *         email: 'john@example.com'
  *         password: 'MyPassword123!'
- *         location: 'Tel Aviv'
- *         profilePicture: 'https://example.com/profile.jpg'
+ *         profilePicture: '/storage/profile_pictures/1692...jpg'
  *
  *     UserLogin:
  *       type: object
@@ -68,7 +64,7 @@ const router = express.Router();
  *             _id: { type: string, example: 60d0fe4f5311236168a109ca }
  *             name: { type: string, example: John Doe }
  *             email: { type: string, example: john@example.com }
- *             profilePicture: { type: string, example: https://example.com/profile.jpg }
+ *             profilePicture: { type: string, example: /storage/profile_pictures/1692...jpg }
  *             provider: { type: string, enum: [Regular, Google], example: Regular }
  *
  *     RefreshTokenRequest:
@@ -89,29 +85,20 @@ const router = express.Router();
  * /auth/register:
  *   post:
  *     summary: Register a new user
- *     description: Create a new user account with email, password, and an optional profile picture.
+ *     description: Create a new user account with email, password, and an optional profile picture URL.
  *     tags: [Auth]
- *     consumes:
- *       - multipart/form-data
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required: [name, email, password]
- *             properties:
- *               name: { type: string, description: The user's full name. }
- *               email: { type: string, format: email, description: The user's email address. }
- *               password: { type: string, format: password, description: The user's password. }
- *               profilePicture: { type: string, format: binary, description: The user's profile picture file (optional). }
+ *         application/json:
+ *           schema: { $ref: '#/components/schemas/UserRegister' }
  *     responses:
  *       '201': { description: User registered successfully, content: { application/json: { schema: { $ref: '#/components/schemas/AuthResponse' } } } }
  *       '400': { description: Bad request (validation error) }
  *       '409': { description: Email already in use }
  *       '500': { description: Server error }
  */
-router.post("/register", upload.single("profilePicture"), authController.register);
+router.post("/register", authController.register);
 
 /**
  * @swagger

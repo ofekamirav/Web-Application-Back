@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import UserModel from '../models/users_model';
 import RecipeModel from '../models/recipe_model';
 import CommentModel from '../models/comment_model';
-import cloudinary from '../config/cloudinary';
 import bcrypt from 'bcrypt'; 
 
 type AuthReq = Request & {
@@ -25,10 +24,6 @@ interface UserProfileResponse {
   provider?: string;
 }
 
-interface CloudinaryUploadResult {
-  secure_url: string;
-  public_id?: string;
-}
 
 const isReplicaSetError = (err: unknown): boolean => {
   return typeof err === 'object' && err !== null && 'code' in err && (err as { code?: number }).code === 20;
@@ -101,67 +96,30 @@ const getCurrentUserProfile = async (req: AuthReq, res: Response): Promise<void>
 const updateCurrentUserProfile = async (req: AuthReq, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
-    if (!userId) {
-      res.status(401).json({ message: 'User not authenticated.' });
-      return;
-    }
+    if (!userId) { res.status(401).json({ message: 'User not authenticated.' }); return; }
 
     const user = await UserModel.findById(userId);
-    if (!user) {
-      res.status(404).json({ message: 'User not found.' });
-      return;
-    }
+    if (!user) { res.status(404).json({ message: 'User not found.' }); return; }
 
     const name = typeof req.body?.name === 'string' ? req.body.name.trim() : undefined;
+    const profilePicture = typeof req.body?.profilePicture === 'string' ? req.body.profilePicture.trim() : undefined;
+
     if (name !== undefined) {
-      if (name.length < 2) {
-        res.status(400).json({ message: 'Name must be at least 2 characters long.' });
-        return;
-      }
+      if (name.length < 2) { res.status(400).json({ message: 'Name must be at least 2 characters long.' }); return; }
       user.name = name;
     }
-
-    // Handle profile picture upload if provided
-    if (req.file) {
-      if (!req.file.mimetype.startsWith('image/')) {
-        res.status(400).json({ message: 'Only image files are allowed.' });
-        return;
-      }
-      if (req.file.size > 5 * 1024 * 1024) {
-        res.status(400).json({ message: 'File size cannot exceed 5MB.' });
-        return;
-      }
-
-      try {
-        const b64 = Buffer.from(req.file.buffer).toString('base64');
-        const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-        const result = (await cloudinary.uploader.upload(dataURI, {
-          folder: 'recipehub/profile_pictures',
-          transformation: [
-            { width: 300, height: 300, crop: 'fill', gravity: 'face' },
-            { quality: 'auto', fetch_format: 'auto' },
-          ],
-        })) as CloudinaryUploadResult;
-
-        user.profilePicture = result.secure_url;
-      } catch (uploadError) {
-        console.error('Cloudinary upload failed:', uploadError);
-        res.status(500).json({ message: 'Image upload failed. Please try again.' });
-        return;
-      }
+    if (profilePicture !== undefined) {
+      user.profilePicture = profilePicture || null; 
     }
 
     const updatedUser = await user.save();
-
-    const response: UserProfileResponse = {
+    res.status(200).json({
       _id: updatedUser._id.toString(),
       name: updatedUser.name,
       email: updatedUser.email,
       profilePicture: updatedUser.profilePicture,
       provider: updatedUser.provider,
-    };
-
-    res.status(200).json(response);
+    });
   } catch (error) {
     console.error('Error updating user profile:', error);
     res.status(500).json({ message: 'Server error while updating profile.' });

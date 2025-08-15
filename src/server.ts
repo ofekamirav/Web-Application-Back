@@ -13,6 +13,7 @@ import swaggerUi from 'swagger-ui-express';
 import process from 'process';
 import path from 'path';
 import fs from 'fs';
+import fileRoute from './routes/file_route';
 
 dotenv.config();
 const app = express();
@@ -42,6 +43,9 @@ app.use('/users', UserRoutes);
 app.use('/recipes', RecipesRoutes);
 app.use('/comments', CommentsRoute);
 app.use('/auth', AuthRoute);
+app.use("/storage", express.static(process.env.STORAGE_DIR || "storage"));
+app.use("/file", fileRoute);
+
 
 const options = {
     definition: {
