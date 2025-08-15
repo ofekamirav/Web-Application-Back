@@ -19,7 +19,7 @@ dotenv.config();
 const app = express();
 
 const publicConfig = {
-    API_BASE_URL: process.env.PUBLIC_API_BASE_URL || '',
+    API_BASE_URL: process.env.PUBLIC_API_BASE_URL || 'https://node01.cs.colman.ac.il',
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
 };
 
