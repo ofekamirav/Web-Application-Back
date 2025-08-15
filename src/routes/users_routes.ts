@@ -32,7 +32,7 @@ router.get('/me', authMiddleware, userController.getCurrentUserProfile);
  * /users/me:
  *   put:
  *     summary: Update current user's profile
- *     description: Update name and/or profile picture (URL)
+ *     description: Update name, email (Regular users only) and/or profile picture URL
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -46,6 +46,9 @@ router.get('/me', authMiddleware, userController.getCurrentUserProfile);
  *               name:
  *                 type: string
  *                 description: New display name (min 2 chars)
+ *               email:
+ *                 type: string
+ *                 description: Only for Regular users (not Google)
  *               profilePicture:
  *                 type: string
  *                 description: URL under /storage/profile_pictures/... (from /file)
