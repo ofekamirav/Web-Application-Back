@@ -19,7 +19,7 @@ dotenv.config();
 const app = express();
 
 const publicConfig = {
-    API_BASE_URL: process.env.PUBLIC_API_BASE_URL || 'https://node01.cs.colman.ac.il',
+    API_BASE_URL: process.env.PUBLIC_API_BASE_URL || '',
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
 };
 
@@ -89,26 +89,26 @@ if (!fs.existsSync(clientDir)) {
 }
 
 const spaFallback: RequestHandler = (req, res, next) => {
-  if (
-    req.path.startsWith('/auth') ||
-    req.path.startsWith('/recipes') ||
-    req.path.startsWith('/comments') ||
-    req.path.startsWith('/users') ||
-    req.path.startsWith('/ai') ||
-    req.path.startsWith('/api-docs') ||
-    req.path.startsWith('/file') ||
-    req.path.startsWith('/storage') ||
-    req.path.startsWith('/env.js')
-  ) {
-    next();
-    return;
-  }
-  const indexPath = path.join(clientDir, 'index.html');
-  if (!fs.existsSync(indexPath)) {
-    res.status(404).send('Frontend not deployed');
-    return;
-  }
-  res.sendFile(indexPath);
+    if (
+        req.path.startsWith('/auth') ||
+        req.path.startsWith('/recipes') ||
+        req.path.startsWith('/comments') ||
+        req.path.startsWith('/users') ||
+        req.path.startsWith('/ai') ||
+        req.path.startsWith('/api-docs') ||
+        req.path.startsWith('/file') ||
+        req.path.startsWith('/storage') ||
+        req.path.startsWith('/env.js')
+    ) {
+        next();
+        return;
+    }
+    const indexPath = path.join(clientDir, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+        res.status(404).send('Frontend not deployed');
+        return;
+    }
+    res.sendFile(indexPath);
 };
 
 app.get('*', spaFallback);
