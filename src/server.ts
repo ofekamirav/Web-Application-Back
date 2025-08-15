@@ -17,6 +17,17 @@ import fs from 'fs';
 dotenv.config();
 const app = express();
 
+const publicConfig = {
+    API_BASE_URL: process.env.PUBLIC_API_BASE_URL || 'https://node01.cs.colman.ac.il',
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
+};
+
+app.get('/env.js', (_req, res) => {
+    res.type('application/javascript').send(
+        `window.__APP_CONFIG__ = ${JSON.stringify(publicConfig)};`
+    );
+});
+
 app.use(cors()); //Enable frontend access
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -58,6 +69,37 @@ const options = {
 };
 const specs = swaggerJsdoc(options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
+const clientDir = process.env.FRONT_DIR || path.join(__dirname, '..', '..', 'front');
+
+if (!fs.existsSync(clientDir)) {
+    console.warn('[frontend] Static directory not found:', clientDir);
+} else {
+    console.log('[frontend] Serving static from:', clientDir);
+    app.use(
+        express.static(clientDir, {
+            index: 'index.html',
+            maxAge: '1d',
+        })
+    );
+}
+
+app.get('*', (req, res, next) => {
+    if (
+        req.path.startsWith('/auth') ||
+        req.path.startsWith('/recipes') ||
+        req.path.startsWith('/comments') ||
+        req.path.startsWith('/users') ||
+        req.path.startsWith('/ai') ||
+        req.path.startsWith('/api-docs')
+    ) {
+        return next();
+    }
+    if (!fs.existsSync(path.join(clientDir, 'index.html'))) {
+        return res.status(404).send('Frontend not deployed');
+    }
+    res.sendFile(path.join(clientDir, 'index.html'));
+});
 
 const clientDir = process.env.FRONT_DIR || path.join(__dirname, '..', '..', 'front');
 
