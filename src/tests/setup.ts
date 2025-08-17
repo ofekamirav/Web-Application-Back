@@ -9,7 +9,7 @@ export let app: Express;
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
-  process.env.DB_CONNECTION = mongoUri; // Set the DB_CONNECTION environment variable to the in-memory MongoDB URI
+  process.env.DB_CONNECTION = mongoUri; 
   app = await initApp();
 });
 
